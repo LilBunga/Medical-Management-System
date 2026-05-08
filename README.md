@@ -211,12 +211,3 @@ When a sale is recorded from the Drugs module:
 - **Sequential ID renumbering** — after a delete, `SN` values are renumbered using a MySQL user variable (`@num`). This approach is not safe for concurrent multi-user environments.
 - **No data backup/restore UI** — use mysqldump or your database tool directly.
 
----
-
-## Development Team
-
-| Name | Roll No. |
-|------|----------|
-| Kakde Shantanu | 25 |
-| Kale Atharva | 26 |
-| Patil Chetan | 66 |
