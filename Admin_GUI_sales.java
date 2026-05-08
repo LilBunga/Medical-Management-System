@@ -1,492 +1,380 @@
 package com.project;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Vector;
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JDialog;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.JTextField;
-import javax.swing.RowFilter;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableModel;
-import javax.swing.table.TableRowSorter;
+import java.awt.*;
+import java.awt.event.*;
+import java.sql.*;
+import java.text.*;
+import java.util.*;
+import java.util.List;
+import javax.swing.*;
+import javax.swing.border.*;
+import javax.swing.event.*;
+import javax.swing.table.*;
 
-public class Admin_GUI_sales implements ActionListener
-{
-    JPanel sales_p , sales_p_west , sales_p_center;
-    JButton delete , update , add , add_b , update_b ;
-    JLabel add_name , add_type , add_price  , today_total , money , add_quantity , grand_total_l, grand_money_l;
-    JLabel update_name , update_type , update_price  ,update_quantity;
-    JTextField add_name_tf  , add_price_tf  , add_quantity_tf;
-    JTextField update_name_tf  , update_price_tf  , update_quantity_tf ;
-    JTable sales_list ;
-    JScrollPane sp ;
-    JTextField search_tf;
-    JButton search_b;
-    DefaultTableModel model ;
-    JComboBox add_type_cb , update_type_cb;
-    Font f = new Font("Bebas Neue" , Font.BOLD , 14);
-    String url = "jdbc:mysql://localhost:3306/medical_management?zeroDateTimeBehavior=CONVERT_TO_NULL";
-    String uname =  "root";
-    String pass = "";
-    int total , amount , grand_total;
-    Admin_GUI_sales()
-    {
-        sales_p = new JPanel();
-        
+public class Admin_GUI_sales implements ActionListener {
+    private JPanel salesPanel, westPanel, centerPanel;
+    private JButton delete, update, updateBtn;
+    private JTextField updateNameTf, updatePriceTf, updateQuantityTf;
+    private JTable salesList;
+    private JScrollPane sp;
+    private JComboBox<String> updateTypeCb;
+    private TableRowSorter<TableModel> sorter;
+    private JTextField fromDateTf, toDateTf;
+
+    Admin_GUI_sales() {
+        salesPanel = new JPanel(new BorderLayout(0, 0));
+
         Admin_GUI.center.removeAll();
-        Admin_GUI.center.repaint();
+        Admin_GUI.center.add(salesPanel, BorderLayout.CENTER);
         Admin_GUI.center.revalidate();
-        Admin_GUI.center.add(sales_p);
-        
-        sales_p_west = new JPanel();
-        sales_p_center = new JPanel();
-        search_tf = new JTextField(10);
-        search_b = new JButton("Search"); 
-        delete = new JButton("Delete");
-        update = new JButton("Update");
-        add = new JButton("Add");
-        today_total = new JLabel("Today's Total :");
-        grand_total_l = new JLabel("Grand Total :");
-        money = new JLabel("0.00 ");
-        grand_money_l = new JLabel("0.00 ");
-        sales_p.setLayout(new BorderLayout(7 , 7));
-        sales_p_west.setLayout(null);
-        sales_p_center.setLayout(null);
-        
-        model = new DefaultTableModel();
-        sales_list = new JTable(model);
-        sales_list.setBackground(Color.LIGHT_GRAY);
-        sales_list.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
-        TableRowSorter<TableModel> sorter = new TableRowSorter<TableModel>(model);
-        sales_list.setRowSorter(sorter);
-        sp = new JScrollPane(sales_list , JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        
-        add.setForeground(new Color(255,250,250));
-        add.setBackground(new Color(0,0,0));
-        delete.setForeground(new Color(255,250,250));
-        delete.setBackground(new Color(0,0,0));
-        update.setForeground(new Color(255,250,250));
-        update.setBackground(new Color(0,0,0));
-        search_b.setForeground(new Color(255,250,250));
-        search_b.setBackground(new Color(0,0,0));
-         
-        search_tf.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-        
-        sales_p_west.setBackground(new Color(152, 251, 152));
-        sales_p_center.setBackground(new Color(152, 251, 152));
-        sales_p_west.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 7, new Color(0, 128, 0)));
-        sales_p_center.setBorder(BorderFactory.createMatteBorder(0, 7, 0, 0, new Color(0, 128, 0)));
-        sales_p_west.setPreferredSize(new Dimension(150,0));
-        
-        
-        ArrayList columnNames = new ArrayList();
-        ArrayList data = new ArrayList();
+        Admin_GUI.center.repaint();
 
-        String url = "jdbc:mysql://localhost:3306/medical_management?zeroDateTimeBehavior=CONVERT_TO_NULL";
-        String uname =  "root";
-        String pass = "";
-        String sql = "SELECT * FROM `mm_sales`";
+        // === WEST ===
+        westPanel = new JPanel();
+        westPanel.setLayout(new BoxLayout(westPanel, BoxLayout.Y_AXIS));
+        westPanel.setBackground(UITheme.CARD_BG);
+        westPanel.setPreferredSize(new Dimension(160, 0));
+        westPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createMatteBorder(0, 0, 0, 1, UITheme.BORDER),
+            new EmptyBorder(20, 10, 20, 10)
+        ));
 
-        try (Connection connection = DriverManager.getConnection( url, uname, pass );
-            Statement stmt = connection.createStatement();
-            ResultSet rs = stmt.executeQuery( sql ))
-            {
+        JLabel actionLabel = new JLabel("ACTIONS");
+        actionLabel.setFont(UITheme.FONT_SMALL);
+        actionLabel.setForeground(UITheme.TEXT_MUTED);
+        actionLabel.setBorder(new EmptyBorder(0, 6, 10, 0));
+        actionLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        update = UITheme.createWarningButton("Update");
+        delete = UITheme.createDangerButton("Delete");
+
+        for (JButton btn : new JButton[]{update, delete}) {
+            btn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 38));
+            btn.setAlignmentX(Component.LEFT_ALIGNMENT);
+        }
+
+        westPanel.add(actionLabel);
+        westPanel.add(update);
+        westPanel.add(Box.createVerticalStrut(8));
+        westPanel.add(delete);
+        westPanel.add(Box.createVerticalGlue());
+
+        // === CENTER ===
+        centerPanel = new JPanel(new BorderLayout(0, 0));
+        centerPanel.setBackground(UITheme.CONTENT_BG);
+
+        // Toolbar with search + export
+        JTextField searchField = UITheme.createSearchField();
+        JButton exportBtn = UITheme.createButton("Export CSV", new Color(71, 85, 105), new Color(51, 65, 85));
+        exportBtn.setBorder(new EmptyBorder(6, 12, 6, 12));
+
+        JPanel toolbar = UITheme.createToolbar("Sales Transactions", searchField, exportBtn);
+
+        // Date filter bar
+        fromDateTf = UITheme.createTextField();
+        fromDateTf.setPreferredSize(new Dimension(110, 32));
+        fromDateTf.setToolTipText("dd/MM/yyyy");
+
+        toDateTf = UITheme.createTextField();
+        toDateTf.setPreferredSize(new Dimension(110, 32));
+        toDateTf.setToolTipText("dd/MM/yyyy");
+
+        JButton applyFilter = UITheme.createPrimaryButton("Filter");
+        applyFilter.setBorder(new EmptyBorder(5, 12, 5, 12));
+        JButton clearFilter = UITheme.createButton("Clear", new Color(100, 116, 139), new Color(71, 85, 105));
+        clearFilter.setBorder(new EmptyBorder(5, 12, 5, 12));
+
+        JPanel filterBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 8));
+        filterBar.setBackground(UITheme.CONTENT_BG);
+        filterBar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, UITheme.BORDER));
+
+        JLabel fromLbl = new JLabel("From:");
+        fromLbl.setFont(UITheme.FONT_LABEL);
+        fromLbl.setForeground(UITheme.TEXT_MUTED);
+        JLabel toLbl = new JLabel("To:");
+        toLbl.setFont(UITheme.FONT_LABEL);
+        toLbl.setForeground(UITheme.TEXT_MUTED);
+        JLabel hint = new JLabel("  format: dd/MM/yyyy");
+        hint.setFont(UITheme.FONT_SMALL);
+        hint.setForeground(UITheme.TEXT_MUTED);
+
+        filterBar.add(fromLbl);
+        filterBar.add(fromDateTf);
+        filterBar.add(toLbl);
+        filterBar.add(toDateTf);
+        filterBar.add(applyFilter);
+        filterBar.add(clearFilter);
+        filterBar.add(hint);
+
+        JPanel northWrapper = new JPanel(new BorderLayout());
+        northWrapper.setBackground(UITheme.CONTENT_BG);
+        northWrapper.add(toolbar, BorderLayout.NORTH);
+        northWrapper.add(filterBar, BorderLayout.SOUTH);
+        centerPanel.add(northWrapper, BorderLayout.NORTH);
+
+        // Table
+        salesList = loadTable("SELECT * FROM `mm_sales`");
+        UITheme.applyTableStyle(salesList);
+        sp = UITheme.createScrollPane(salesList);
+
+        JPanel tableCard = new JPanel(new BorderLayout());
+        tableCard.setBackground(UITheme.CARD_BG);
+        tableCard.setBorder(new EmptyBorder(16, 16, 0, 16));
+        tableCard.add(sp, BorderLayout.CENTER);
+
+        // Stats bar
+        String today = new SimpleDateFormat("dd/MM/yyyy").format(new java.util.Date());
+        int total = 0, grandTotal = 0;
+        for (int x = 0; x < salesList.getRowCount(); x++) {
+            int amount = Integer.parseInt(salesList.getValueAt(x, 5).toString());
+            grandTotal += amount;
+            if (today.equals(salesList.getValueAt(x, 6).toString())) total += amount;
+        }
+
+        JPanel statsBar = new JPanel(new GridLayout(1, 2, 16, 0));
+        statsBar.setBackground(UITheme.CARD_BG);
+        statsBar.setBorder(new EmptyBorder(16, 16, 16, 16));
+        statsBar.add(buildStatCard("Today's Revenue", "Rp " + String.format("%,d", total), UITheme.SUCCESS));
+        statsBar.add(buildStatCard("Grand Total Revenue", "Rp " + String.format("%,d", grandTotal), UITheme.PRIMARY));
+
+        centerPanel.add(tableCard, BorderLayout.CENTER);
+        centerPanel.add(statsBar, BorderLayout.SOUTH);
+
+        // Sorter & wiring
+        sorter = new TableRowSorter<>(salesList.getModel());
+        salesList.setRowSorter(sorter);
+
+        searchField.getDocument().addDocumentListener(new DocumentListener() {
+            public void insertUpdate(DocumentEvent e) { applySearch(searchField.getText()); }
+            public void removeUpdate(DocumentEvent e) { applySearch(searchField.getText()); }
+            public void changedUpdate(DocumentEvent e) { applySearch(searchField.getText()); }
+        });
+
+        applyFilter.addActionListener(e -> applyDateFilter());
+        clearFilter.addActionListener(e -> {
+            fromDateTf.setText("");
+            toDateTf.setText("");
+            sorter.setRowFilter(null);
+        });
+
+        exportBtn.addActionListener(e -> ExportUtils.exportToCSV(salesList, "Sales", Admin_GUI.frame));
+
+        delete.addActionListener(this);
+        update.addActionListener(this);
+
+        salesPanel.add(westPanel, BorderLayout.WEST);
+        salesPanel.add(centerPanel, BorderLayout.CENTER);
+    }
+
+    private void applySearch(String text) {
+        String trimmed = text.trim();
+        sorter.setRowFilter(trimmed.isEmpty() ? null : RowFilter.regexFilter("(?i)" + trimmed));
+    }
+
+    private void applyDateFilter() {
+        String from = fromDateTf.getText().trim();
+        String to   = toDateTf.getText().trim();
+
+        if (from.isEmpty() && to.isEmpty()) {
+            sorter.setRowFilter(null);
+            return;
+        }
+
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+        sdf.setLenient(false);
+
+        // Validate format
+        try {
+            if (!from.isEmpty()) sdf.parse(from);
+            if (!to.isEmpty())   sdf.parse(to);
+        } catch (ParseException ex) {
+            JOptionPane.showMessageDialog(Admin_GUI.frame,
+                "Invalid date format. Please use dd/MM/yyyy", "Filter Error", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        sorter.setRowFilter(new RowFilter<TableModel, Integer>() {
+            @Override
+            public boolean include(Entry<? extends TableModel, ? extends Integer> entry) {
+                try {
+                    String dateStr = entry.getValue(6).toString();
+                    Date rowDate   = sdf.parse(dateStr);
+                    if (!from.isEmpty() && rowDate.before(sdf.parse(from))) return false;
+                    if (!to.isEmpty()   && rowDate.after(sdf.parse(to)))   return false;
+                    return true;
+                } catch (ParseException e) {
+                    return true;
+                }
+            }
+        });
+    }
+
+    private JPanel buildStatCard(String title, String value, Color accent) {
+        JPanel card = new JPanel();
+        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+        card.setBackground(UITheme.CONTENT_BG);
+        card.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createMatteBorder(0, 4, 0, 0, accent),
+            BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(UITheme.BORDER, 1),
+                new EmptyBorder(12, 16, 12, 16)
+            )
+        ));
+        JLabel titleLbl = new JLabel(title);
+        titleLbl.setFont(UITheme.FONT_SMALL);
+        titleLbl.setForeground(UITheme.TEXT_MUTED);
+        titleLbl.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JLabel valueLbl = new JLabel(value);
+        valueLbl.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        valueLbl.setForeground(UITheme.TEXT_PRIMARY);
+        valueLbl.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        card.add(titleLbl);
+        card.add(Box.createVerticalStrut(4));
+        card.add(valueLbl);
+        return card;
+    }
+
+    private JTable loadTable(String sql) {
+        List<String> columnNames = new ArrayList<>();
+        List<List<Object>> data = new ArrayList<>();
+        try (Connection con = DBConnection.getConnection();
+             Statement stmt = con.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
             ResultSetMetaData md = rs.getMetaData();
-            int columns = md.getColumnCount();
-
-            //  Get column names
-            for (int i = 1; i <= columns; i++)
-            {
-                columnNames.add( md.getColumnName(i) );
+            int cols = md.getColumnCount();
+            for (int i = 1; i <= cols; i++) columnNames.add(md.getColumnName(i));
+            while (rs.next()) {
+                List<Object> row = new ArrayList<>(cols);
+                for (int i = 1; i <= cols; i++) row.add(rs.getObject(i));
+                data.add(row);
             }
-
-            //  Get row data
-            while (rs.next())
-            {
-                ArrayList row = new ArrayList(columns);
-
-                for (int i = 1; i <= columns; i++)
-                {
-                    row.add( rs.getObject(i) );
+        } catch (SQLException e) { System.out.println(e.getMessage()); }
+        Vector<String> colVec = new Vector<>(columnNames);
+        Vector<Vector<Object>> dataVec = new Vector<>();
+        for (List<Object> row : data) dataVec.add(new Vector<>(row));
+        return new JTable(dataVec, colVec) {
+            @Override public Class<?> getColumnClass(int col) {
+                for (int row = 0; row < getRowCount(); row++) {
+                    Object o = getValueAt(row, col);
+                    if (o != null) return o.getClass();
                 }
-
-                data.add( row );
-            }
-        }
-        catch (SQLException e)
-        {
-            System.out.println( e.getMessage() );
-        }
-        Vector columnNamesVector = new Vector();
-        Vector dataVector = new Vector();
-
-        for (int i = 0; i < data.size(); i++)
-        {
-            ArrayList subArray = (ArrayList)data.get(i);
-            Vector subVector = new Vector();
-            for (int j = 0; j < subArray.size(); j++)
-            {
-                subVector.add(subArray.get(j));
-            }
-            dataVector.add(subVector);
-        }
-
-        for (int i = 0; i < columnNames.size(); i++ )
-            columnNamesVector.add(columnNames.get(i));
-
-        //  Create table with database data    
-        sales_list = new JTable(dataVector, columnNamesVector)
-        {
-            public Class getColumnClass(int column)
-            {
-                for (int row = 0; row < getRowCount(); row++)
-                {
-                    Object o = getValueAt(row, column);
-
-                    if (o != null)
-                    {
-                        return o.getClass();
-                    }
-                }
-
                 return Object.class;
             }
         };
-        sp = new JScrollPane( sales_list );
-        sp.setBounds(30, 50 , 800, 320);
-        today_total.setBounds(30 , 407 , 90 , 25);
-        grand_total_l.setBounds(600, 407, 90, 25);
-        
-        
-        add.addActionListener(this);
-        delete.addActionListener(this);
-        update.addActionListener(this);
-        search_b.addActionListener(new ActionListener() {
-          public void actionPerformed(ActionEvent e) {
-            String text = search_tf.getText();
-              if (text.trim().length() == 0) {
-                 sorter.setRowFilter(null);
-              } else {
-                 sorter.setRowFilter(RowFilter.regexFilter("(?i)" + text));
-              }
-          }
-        });
-        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
-        Date date = new Date();
-        total = 0;
-        grand_total = 0;
-        for(int x = 0; x < sales_list.getRowCount(); x++)
-        {
-            if(formatter.format(date).toString().equals(sales_list.getValueAt(x, 6).toString()))
-            {
-                amount = Integer.parseInt(sales_list.getValueAt(x, 5).toString());
-                total = amount+total;
-            }
-            
-            amount = Integer.parseInt(sales_list.getValueAt(x, 5).toString());
-            grand_total = amount+grand_total;
-        }
-        
-        money.setText(total + "");
-        money.setFont(new Font("Arial" , Font.BOLD , 34));
-        money.setBounds(130 , 400 , 150 , 40);
-        grand_money_l.setText(grand_total + "");
-        grand_money_l.setFont(new Font("Arial" , Font.BOLD , 34));
-        grand_money_l.setBounds(700 , 400 , 150 , 40);
-        
-        add.setBounds(33, 130, 80, 30);
-        update.setBounds(33, 150, 80, 30);
-        delete.setBounds(33, 250, 80, 30);
-        
-        search_tf.setBounds(500, 10, 150, 25);
-        search_b.setBounds(680, 10, 80, 25);
-             
-//        sales_p_west.add(add);
-        sales_p_west.add(update);
-        sales_p_west.add(delete);
-        
-//        sales_p_center.add(search_tf);
-//        sales_p_center.add(search_b);
-        sales_p_center.add(today_total);
-        sales_p_center.add(money);
-        sales_p_center.add(sp);
-        sales_p_center.add(grand_money_l);
-        sales_p_center.add(grand_total_l);
-        
-        sales_p.add(sales_p_west , BorderLayout.WEST);
-        sales_p.add(sales_p_center , BorderLayout.CENTER);
- 
     }
-    public void actionPerformed(ActionEvent ae) 
-    {
-        if(ae.getSource() == add)
-        {
-            JDialog add_db =new JDialog(Admin_GUI.frame,"Add to Drugs List",false);
-            
-            add_db.setLayout(null);
-            
-            add_name = new JLabel("Name :");
-            add_type = new JLabel("Type :");
-            add_price = new JLabel("Price :");
-            add_quantity = new JLabel("Quantity :");
-            add_name_tf = new JTextField(20);
-            add_type_cb = new JComboBox();
-            add_price_tf = new JTextField(20);
-            add_quantity_tf = new JTextField(20);
-            add_b = new JButton("Add");
-            
-            add_type_cb.addItem("Select drug type");
-            add_type_cb.addItem("Medicine");
-            add_type_cb.addItem("Syrup");
-            
-            add_b.setForeground(new Color(255,250,250));
-            add_b.setBackground(new Color(0,0,0));
-            
-            add_name.setBounds(110, 40, 150, 30);
-            add_type.setBounds(110, 90, 150, 30);
-            add_price.setBounds(110, 140, 150, 30);
-            add_quantity.setBounds(110, 190, 150, 30);
-            
-            add_name_tf.setBounds(220, 40, 150, 25);
-            add_type_cb.setBounds(220, 90, 150, 30);
-            add_price_tf.setBounds(220, 140, 150, 30);
-            add_quantity_tf.setBounds(220, 190, 150, 30);
-            
-            add_b.setBounds(200, 285, 80, 30);
-            
-            add_b.addActionListener(this);
-            
-            add_name.setFont(f);
-            add_type.setFont(f);
-            add_price.setFont(f);
-            add_quantity.setFont(f);
-            
-            add_name_tf.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-            add_type_cb.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-            add_price_tf.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-            add_quantity_tf.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-            
-            add_db.add(add_name);
-            add_db.add(add_type);
-            add_db.add(add_price);
-            add_db.add(add_quantity);
-            
-            add_db.add(add_name_tf);
-            add_db.add(add_type_cb);
-            add_db.add(add_price_tf);
-            add_db.add(add_quantity_tf);
-            
-            add_db.add(add_b);
-            
-            add_db.getContentPane().setBackground(new Color(152, 251, 152));
-            add_db.getRootPane().setBorder(BorderFactory.createMatteBorder(0, 0, 0, 7, new Color(0, 128, 0)));
-            add_db.setVisible(true);
-            add_db.setSize(500,400); 
-            add_db.setLocationRelativeTo(null);
+
+    private void renumberIds(Connection con) throws SQLException {
+        try (Statement st = con.createStatement()) {
+            st.addBatch("SET @num := 0;");
+            st.addBatch("UPDATE `mm_sales` SET SN = @num := (@num+1);");
+            st.addBatch("ALTER TABLE `mm_sales` AUTO_INCREMENT = 1;");
+            st.executeBatch();
         }
-        else if(ae.getSource() == add_b)
-        {
-            if(add_name_tf.getText().equals("") || add_type_cb.getSelectedItem().equals("Select drug type") || add_price_tf.getText().equals("") || add_quantity_tf.getText().equals("") )
-            {
-                JOptionPane.showMessageDialog(Admin_GUI.frame,"Cann't insert empty fields","Sales - Add",JOptionPane.ERROR_MESSAGE); 
-            }
-            else
-            {
-                SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
-                Date date = new Date();
-                try
-                {
-                    Class.forName("com.mysql.cj.jdbc.Driver");
-                    Connection con = DriverManager.getConnection(url , uname , pass);   
-                    Statement st = con.createStatement();
-                    st.execute("INSERT INTO `mm_sales`(`Name`, `Type`, `Price`, `Quantity`, `Date`) VALUES ('"+add_name_tf.getText()+"','"+add_type_cb.getSelectedItem()+"','"+Integer.parseInt(add_price_tf.getText())+"','"+Integer.parseInt(add_quantity_tf.getText())+"','"+formatter.format(date).toString()+"');");
-                    st.close();
-                    con.close();
-                }
-                catch(Exception e)
-                {
-                    System.out.println(e);
-                }
-//                int i = 0;
-//                i = (int) (i + Double.parseDouble(add_price_tf.getText()));  
-//                System.out.println(i);
-//                money.setText( i+"₹");
-                add_name_tf.setText("");
-                add_price_tf.setText("");
-                add_quantity_tf.setText("");
-                JOptionPane.showMessageDialog(Admin_GUI.frame,"Successfully Added.","Sales - Add",JOptionPane.INFORMATION_MESSAGE); 
-            }
-            
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent ae) {
+        if (ae.getSource() == delete)         handleDelete();
+        else if (ae.getSource() == update)    showUpdateDialog();
+        else if (ae.getSource() == updateBtn) handleUpdate();
+    }
+
+    private void handleDelete() {
+        int rowNo = salesList.getSelectedRow();
+        if (rowNo == -1) {
+            JOptionPane.showMessageDialog(Admin_GUI.frame, "Please select a row first.", "Sales — Delete", JOptionPane.WARNING_MESSAGE);
+            return;
         }
-        else if(ae.getSource() == delete)
-        {
-            int row_no = sales_list.getSelectedRow();
-            if(row_no == -1)
-            {
-                JOptionPane.showMessageDialog(Admin_GUI.frame,"Select Row First.","Sales - Update",JOptionPane.ERROR_MESSAGE); 
-            }
-            else if(sales_list.getSelectedRow() != -1) 
-            {
-                try
-                {
-                    int sn = (int) sales_list.getModel().getValueAt(sales_list.getSelectedRow(), 0);
-                    String sql = "DELETE FROM `mm_sales` WHERE SN = \""+sn+"\";";
-                    Class.forName("com.mysql.cj.jdbc.Driver");
-                    Connection con = DriverManager.getConnection(url , uname , pass);  
-                    Statement st3 = con.createStatement();
-                    String q1 = "SET  @num := 0;";
-                    String q2 = "UPDATE `mm_sales` SET SN = @num := (@num+1);";
-                    String q3 = "ALTER TABLE `mm_sales` AUTO_INCREMENT =1;";
-                    st3.addBatch(q1);
-                    st3.addBatch(q2);
-                    st3.addBatch(q3);
-                    Statement st = con.createStatement();
-                    st.executeUpdate(sql);
-                    st3.executeBatch();
-                    st3.close();
-                    st.close();
-                    con.close();
-                }
-                catch(Exception e)
-                {
-                    System.out.println(e);
-                }
-                JOptionPane.showMessageDialog(Admin_GUI.frame,"Deleted Successfully","Sales - Delete",JOptionPane.INFORMATION_MESSAGE); 
-                new Admin_GUI_sales();
-            }
-            
+        int confirm = JOptionPane.showConfirmDialog(Admin_GUI.frame, "Delete this sales record?", "Confirm Delete", JOptionPane.YES_NO_OPTION);
+        if (confirm != JOptionPane.YES_OPTION) return;
+
+        try (Connection con = DBConnection.getConnection()) {
+            int modelRow = salesList.convertRowIndexToModel(rowNo);
+            int sn = (int) salesList.getModel().getValueAt(modelRow, 0);
+            PreparedStatement ps = con.prepareStatement("DELETE FROM `mm_sales` WHERE SN = ?");
+            ps.setInt(1, sn); ps.executeUpdate(); ps.close();
+            renumberIds(con);
+        } catch (Exception e) { System.out.println(e); }
+        new Admin_GUI_sales();
+        JOptionPane.showMessageDialog(Admin_GUI.frame, "Record deleted successfully.", "Sales — Delete", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void showUpdateDialog() {
+        int rowNo = salesList.getSelectedRow();
+        if (rowNo == -1) {
+            JOptionPane.showMessageDialog(Admin_GUI.frame, "Please select a row first.", "Sales — Update", JOptionPane.WARNING_MESSAGE);
+            return;
         }
-        else if(ae.getSource() == update)
-        {
-            int row_no = sales_list.getSelectedRow();
-            if(row_no == -1)
-            {
-                JOptionPane.showMessageDialog(Admin_GUI.frame,"Select Row First.","Sales - Update",JOptionPane.ERROR_MESSAGE); 
-            }
-            else
-            {
-                JDialog update_db =new JDialog(Admin_GUI.frame,"Update to Drugs List",false);
-            
-                update_db.setLayout(null);
+        int modelRow = salesList.convertRowIndexToModel(rowNo);
+        JDialog dialog = new JDialog(Admin_GUI.frame, "Update Sale", true);
+        dialog.setSize(440, 380);
+        dialog.setLocationRelativeTo(Admin_GUI.frame);
+        dialog.setLayout(new BorderLayout());
 
-                update_name = new JLabel("Name :");
-                update_type = new JLabel("Type :");
-                update_price = new JLabel("Price");
-                update_quantity = new JLabel("Quantity :");
-                update_name_tf = new JTextField(20);
-                update_type_cb = new JComboBox();
-                update_price_tf = new JTextField(20);
-                update_quantity_tf = new JTextField(20);
-                update_b = new JButton("Update");
-                
-                update_type_cb.addItem("Select drug type");
-                update_type_cb.addItem("Medicine");
-                update_type_cb.addItem("Syrup");
+        JPanel form = UITheme.createFormPanel();
+        updateNameTf     = UITheme.createTextField();
+        updateTypeCb     = UITheme.createComboBox("Select drug type", "Medicine", "Syrup");
+        updatePriceTf    = UITheme.createTextField();
+        updateQuantityTf = UITheme.createTextField();
 
-                update_name_tf.setText(sales_list.getModel().getValueAt(row_no, 1).toString());
-                update_price_tf.setText(sales_list.getModel().getValueAt(row_no, 3).toString());
-                update_quantity_tf.setText(sales_list.getModel().getValueAt(row_no, 4).toString());
+        updateNameTf.setText(salesList.getModel().getValueAt(modelRow, 1).toString());
+        updatePriceTf.setText(salesList.getModel().getValueAt(modelRow, 3).toString());
+        updateQuantityTf.setText(salesList.getModel().getValueAt(modelRow, 4).toString());
 
-                update_b.setForeground(new Color(255,250,250));
-                update_b.setBackground(new Color(0,0,0));
+        form.add(UITheme.createFormLabel("Name"),     UITheme.labelConstraints(0));
+        form.add(updateNameTf,                         UITheme.fieldConstraints(0));
+        form.add(UITheme.createFormLabel("Type"),     UITheme.labelConstraints(1));
+        form.add(updateTypeCb,                         UITheme.fieldConstraints(1));
+        form.add(UITheme.createFormLabel("Price"),    UITheme.labelConstraints(2));
+        form.add(updatePriceTf,                        UITheme.fieldConstraints(2));
+        form.add(UITheme.createFormLabel("Quantity"), UITheme.labelConstraints(3));
+        form.add(updateQuantityTf,                     UITheme.fieldConstraints(3));
 
-                update_name.setBounds(110, 40, 150, 30);
-                update_type.setBounds(110, 90, 150, 30);
-                update_price.setBounds(110, 140, 150, 30);
-                update_quantity.setBounds(110, 190, 150, 30);
+        updateBtn = UITheme.createWarningButton("Save Changes");
+        updateBtn.addActionListener(this);
+        JButton cancel = UITheme.createButton("Cancel", new Color(100, 116, 139), new Color(71, 85, 105));
+        cancel.addActionListener(e -> dialog.dispose());
 
-                update_name_tf.setBounds(220, 40, 150, 25);
-                update_type_cb.setBounds(220, 90, 150, 30);
-                update_price_tf.setBounds(220, 140, 150, 30);
-                update_quantity_tf.setBounds(220, 190, 150, 30);
+        dialog.add(UITheme.createSectionHeader("Update Sale Record"), BorderLayout.NORTH);
+        dialog.add(form, BorderLayout.CENTER);
+        dialog.add(UITheme.createDialogButtonPanel(cancel, updateBtn), BorderLayout.SOUTH);
+        UITheme.styleDialog(dialog);
+        dialog.setVisible(true);
+    }
 
-                update_b.setBounds(200, 285, 80, 30);
-
-                update_b.addActionListener(this);
-
-                update_name.setFont(f);
-                update_type.setFont(f);
-                update_price.setFont(f);
-                update_quantity.setFont(f);
-
-                update_name_tf.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-                update_type_cb.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-                update_price_tf.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-                update_quantity_tf.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-
-                update_db.add(update_name);
-                update_db.add(update_type);
-                update_db.add(update_price);
-                update_db.add(update_quantity);
-
-                update_db.add(update_name_tf);
-                update_db.add(update_type_cb);
-                update_db.add(update_price_tf);
-                update_db.add(update_quantity_tf);
-
-                update_db.add(update_b);
-
-                update_db.getContentPane().setBackground(new Color(152, 251, 152));
-                update_db.getRootPane().setBorder(BorderFactory.createMatteBorder(0, 0, 0, 7, new Color(0, 128, 0)));
-                update_db.setVisible(true);
-                update_db.setSize(500,400);  
-                update_db.setLocationRelativeTo(null);
-            }
-             
+    private void handleUpdate() {
+        if (updateNameTf.getText().isEmpty() || updateTypeCb.getSelectedItem().equals("Select drug type")
+                || updatePriceTf.getText().isEmpty() || updateQuantityTf.getText().isEmpty()) {
+            JOptionPane.showMessageDialog(Admin_GUI.frame, "Please fill in all fields.", "Sales — Update", JOptionPane.WARNING_MESSAGE);
+            return;
         }
-        else if(ae.getSource() == update_b)
-        {
-            if(update_name_tf.getText().equals("") || update_type_cb.getSelectedItem().equals("Select drug type") || update_price_tf.getText().equals("") || update_quantity_tf.getText().equals(""))
-            {
-                JOptionPane.showMessageDialog(Admin_GUI.frame,"Empty Fields cann't be Entered.","Sales - Update",JOptionPane.ERROR_MESSAGE); 
-            }
-            else if(sales_list.getSelectedRow() != -1)
-            {
-                try
-                {
-                    int sn = (int) sales_list.getModel().getValueAt(sales_list.getSelectedRow(), 0);
-                    String sql = "UPDATE `mm_sales` SET `Name`='"+update_name_tf.getText()+"',`Type`='"+update_type_cb.getSelectedItem()+"',`Price`='"+Integer.parseInt(update_price_tf.getText())+"',`Quantity`='"+Integer.parseInt(update_quantity_tf.getText())+"' WHERE Name = \""+sn+"\";";
-                    Class.forName("com.mysql.cj.jdbc.Driver");
-                    Connection con = DriverManager.getConnection(url , uname , pass);   
-                    Statement st = con.createStatement();
-                    st.executeUpdate(sql);
-                    st.close();
-                    con.close();
-                }
-                catch(Exception e)
-                {
-                    System.out.println(e);
-                }
-                JOptionPane.showMessageDialog(Admin_GUI.frame,"Row Updated","Sales - Update",JOptionPane.INFORMATION_MESSAGE); 
-                new Admin_GUI_sales();
-            }
-            else
-            {
-                JOptionPane.showMessageDialog(Admin_GUI.frame,"Select Row First.","Sales - Update",JOptionPane.ERROR_MESSAGE); 
-            }
-            
+        if (salesList.getSelectedRow() == -1) {
+            JOptionPane.showMessageDialog(Admin_GUI.frame, "Please select a row first.", "Sales — Update", JOptionPane.WARNING_MESSAGE);
+            return;
         }
-                
+        int price, quantity;
+        try {
+            price    = Integer.parseInt(updatePriceTf.getText());
+            quantity = Integer.parseInt(updateQuantityTf.getText());
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(Admin_GUI.frame, "Price and Quantity must be whole numbers.", "Sales — Update", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        try (Connection con = DBConnection.getConnection()) {
+            int modelRow = salesList.convertRowIndexToModel(salesList.getSelectedRow());
+            int sn = (int) salesList.getModel().getValueAt(modelRow, 0);
+            PreparedStatement ps = con.prepareStatement(
+                "UPDATE `mm_sales` SET `Name`=?, `Type`=?, `Price`=?, `Quantity`=? WHERE SN = ?");
+            ps.setString(1, updateNameTf.getText());
+            ps.setString(2, (String) updateTypeCb.getSelectedItem());
+            ps.setInt(3, price);
+            ps.setInt(4, quantity);
+            ps.setInt(5, sn);
+            ps.executeUpdate(); ps.close();
+        } catch (Exception e) { System.out.println(e); return; }
+        new Admin_GUI_sales();
+        JOptionPane.showMessageDialog(Admin_GUI.frame, "Record updated successfully.", "Sales — Update", JOptionPane.INFORMATION_MESSAGE);
     }
 }

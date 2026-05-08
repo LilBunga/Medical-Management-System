@@ -1,418 +1,277 @@
 package com.project;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Vector;
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JDialog;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.JTextField;
-import javax.swing.RowFilter;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableModel;
-import javax.swing.table.TableRowSorter;
+import java.awt.*;
+import java.awt.event.*;
+import java.sql.*;
+import java.util.*;
+import java.util.List;
+import javax.swing.*;
+import javax.swing.border.*;
+import javax.swing.event.*;
+import javax.swing.table.*;
 
-public class Admin_GUI_company implements ActionListener
-{
-    JPanel company_p , company_p_west , company_p_center;
-    JButton delete , update , add , add_b , update_b ;
-    JLabel add_name , add_address , add_phone_no , add_expiry_date , add_company ;
-    JLabel update_name , update_address , update_phone_no , update_expiry_date , update_company ;
-    JTextField add_name_tf , add_address_tf , add_phone_no_tf ;
-    JTextField update_name_tf , update_address_tf , update_phone_no_tf ;
-    JTable company_list ;
-    JTextField search_tf;
-    JButton search_b;
-    JScrollPane sp ;
-    DefaultTableModel model ;
-    JComboBox add_type_cb , update_type_cb ; 
-//    int i;
-    String url = "jdbc:mysql://localhost:3306/medical_management?zeroDateTimeBehavior=CONVERT_TO_NULL";
-    String uname =  "root";
-    String pass = "";
-    Font f = new Font("Bebas Neue" , Font.BOLD , 14);
-    Admin_GUI_company()
-    {
-        company_p = new JPanel();
-        
+public class Admin_GUI_company implements ActionListener {
+    private JPanel companyPanel, westPanel, centerPanel;
+    private JButton delete, update, add, addBtn, updateBtn;
+    private JTextField addNameTf, addAddressTf, addPhoneNoTf;
+    private JTextField updateNameTf, updateAddressTf, updatePhoneNoTf;
+    private JTable companyList;
+    private JScrollPane sp;
+    private TableRowSorter<TableModel> sorter;
+
+    Admin_GUI_company() {
+        companyPanel = new JPanel(new BorderLayout(0, 0));
+
         Admin_GUI.center.removeAll();
-        Admin_GUI.center.repaint();
+        Admin_GUI.center.add(companyPanel, BorderLayout.CENTER);
         Admin_GUI.center.revalidate();
-        Admin_GUI.center.add(company_p);
-        
-        company_p_west = new JPanel();
-        company_p_center = new JPanel();
-        search_tf = new JTextField(10);
-        search_b = new JButton("Search"); 
-        delete = new JButton("Delete");
-        update = new JButton("Update");
-        add = new JButton("Add");
-        company_p.setLayout(new BorderLayout(7 , 7));
-        company_p_west.setLayout(null);
-        company_p_center.setLayout(null);
-        
-        model = new DefaultTableModel();
-        company_list = new JTable(model);
-        company_list.setBackground(Color.LIGHT_GRAY);
-        company_list.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
-        TableRowSorter<TableModel> sorter = new TableRowSorter<TableModel>(model);
-        company_list.setRowSorter(sorter);
-        sp = new JScrollPane(company_list , JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        
-        add.setForeground(new Color(255,250,250));
-        add.setBackground(new Color(0,0,0));
-        delete.setForeground(new Color(255,250,250));
-        delete.setBackground(new Color(0,0,0));
-        update.setForeground(new Color(255,250,250));
-        update.setBackground(new Color(0,0,0));
-        search_b.setForeground(new Color(255,250,250));
-        search_b.setBackground(new Color(0,0,0));
-         
-        search_tf.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-        
-        company_p_west.setBackground(new Color(152, 251, 152));
-        company_p_center.setBackground(new Color(152, 251, 152));
-        company_p_west.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 7, new Color(0, 128, 0)));
-        company_p_center.setBorder(BorderFactory.createMatteBorder(0, 7, 0, 0, new Color(0, 128, 0)));
-        company_p_west.setPreferredSize(new Dimension(150,0));
-        
-        
-        ArrayList columnNames = new ArrayList();
-        ArrayList data = new ArrayList();
+        Admin_GUI.center.repaint();
 
-        String url = "jdbc:mysql://localhost:3306/medical_management?zeroDateTimeBehavior=CONVERT_TO_NULL";
-        String uname =  "root";
-        String pass = "";
-        String sql = "SELECT * FROM `mm_company`";
+        // === WEST: Action buttons ===
+        westPanel = new JPanel();
+        westPanel.setLayout(new BoxLayout(westPanel, BoxLayout.Y_AXIS));
+        westPanel.setBackground(UITheme.CARD_BG);
+        westPanel.setPreferredSize(new Dimension(160, 0));
+        westPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createMatteBorder(0, 0, 0, 1, UITheme.BORDER),
+            new EmptyBorder(20, 10, 20, 10)
+        ));
 
-        try (Connection connection = DriverManager.getConnection( url, uname, pass );
-            Statement stmt = connection.createStatement();
-            ResultSet rs = stmt.executeQuery( sql ))
-        {
-            ResultSetMetaData md = rs.getMetaData();
-            int columns = md.getColumnCount();
+        JLabel actionLabel = new JLabel("ACTIONS");
+        actionLabel.setFont(UITheme.FONT_SMALL);
+        actionLabel.setForeground(UITheme.TEXT_MUTED);
+        actionLabel.setBorder(new EmptyBorder(0, 6, 10, 0));
+        actionLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-            //  Get column names
-            for (int i = 1; i <= columns; i++)
-            {
-                columnNames.add( md.getColumnName(i) );
-            }
+        add    = UITheme.createPrimaryButton("Add Company");
+        update = UITheme.createWarningButton("Update");
+        delete = UITheme.createDangerButton("Delete");
 
-            //  Get row data
-            while (rs.next())
-            {
-                ArrayList row = new ArrayList(columns);
-
-                for (int i = 1; i <= columns; i++)
-                {
-                    row.add( rs.getObject(i) );
-                }
-
-                data.add( row );
-            }
-        }
-        catch (SQLException e)
-        {
-            System.out.println( e.getMessage() );
-        }
-        Vector columnNamesVector = new Vector();
-        Vector dataVector = new Vector();
-
-        for (int i = 0; i < data.size(); i++)
-        {
-            ArrayList subArray = (ArrayList)data.get(i);
-            Vector subVector = new Vector();
-            for (int j = 0; j < subArray.size(); j++)
-            {
-                subVector.add(subArray.get(j));
-            }
-            dataVector.add(subVector);
+        for (JButton btn : new JButton[]{add, update, delete}) {
+            btn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 38));
+            btn.setAlignmentX(Component.LEFT_ALIGNMENT);
         }
 
-        for (int i = 0; i < columnNames.size(); i++ )
-            columnNamesVector.add(columnNames.get(i));
+        westPanel.add(actionLabel);
+        westPanel.add(add);
+        westPanel.add(Box.createVerticalStrut(8));
+        westPanel.add(update);
+        westPanel.add(Box.createVerticalStrut(8));
+        westPanel.add(delete);
+        westPanel.add(Box.createVerticalGlue());
 
-        //  Create table with database data    
-        company_list = new JTable(dataVector, columnNamesVector)
-        {
-            public Class getColumnClass(int column)
-            {
-                for (int row = 0; row < getRowCount(); row++)
-                {
-                    Object o = getValueAt(row, column);
+        // === CENTER ===
+        centerPanel = new JPanel(new BorderLayout(0, 0));
+        centerPanel.setBackground(UITheme.CONTENT_BG);
 
-                    if (o != null)
-                    {
-                        return o.getClass();
-                    }
-                }
+        // Toolbar with search + export
+        JTextField searchField = UITheme.createSearchField();
+        JButton exportBtn = UITheme.createButton("Export CSV", new Color(71, 85, 105), new Color(51, 65, 85));
+        exportBtn.setBorder(new EmptyBorder(6, 12, 6, 12));
 
-                return Object.class;
-            }
-        };
-        sp = new JScrollPane( company_list );
-        sp.setBounds(30, 50 , 800, 400);
-        company_p_center.add( sp );
-        
+        JPanel toolbar = UITheme.createToolbar("Company / Supplier List", searchField, exportBtn);
+        centerPanel.add(toolbar, BorderLayout.NORTH);
+
+        // Table
+        companyList = loadTable("SELECT * FROM `mm_company`");
+        UITheme.applyTableStyle(companyList);
+        sp = UITheme.createScrollPane(companyList);
+
+        JPanel tableCard = new JPanel(new BorderLayout());
+        tableCard.setBackground(UITheme.CARD_BG);
+        tableCard.setBorder(new EmptyBorder(16, 16, 16, 16));
+        tableCard.add(sp, BorderLayout.CENTER);
+        centerPanel.add(tableCard, BorderLayout.CENTER);
+
+        // Sorter & Search wiring
+        sorter = new TableRowSorter<>(companyList.getModel());
+        companyList.setRowSorter(sorter);
+
+        searchField.getDocument().addDocumentListener(new DocumentListener() {
+            public void insertUpdate(DocumentEvent e) { applySearch(searchField.getText()); }
+            public void removeUpdate(DocumentEvent e) { applySearch(searchField.getText()); }
+            public void changedUpdate(DocumentEvent e) { applySearch(searchField.getText()); }
+        });
+
+        exportBtn.addActionListener(e -> ExportUtils.exportToCSV(companyList, "Companies", Admin_GUI.frame));
+
         add.addActionListener(this);
         delete.addActionListener(this);
         update.addActionListener(this);
-        search_b.addActionListener(new ActionListener() {
-          public void actionPerformed(ActionEvent e) {
-            String text = search_tf.getText();
-              if (text.trim().length() == 0) {
-                 sorter.setRowFilter(null);
-              } else {
-                 sorter.setRowFilter(RowFilter.regexFilter("(?i)" + text));
-              }
-          }
-        });
-        
-        add.setBounds(33, 130, 80, 30);
-        update.setBounds(33, 210, 80, 30);
-        delete.setBounds(33, 290, 80, 30);
-        
-        search_tf.setBounds(500, 10, 150, 25);
-        search_b.setBounds(680, 10, 80, 25);
-             
-        company_p_west.add(add);
-        company_p_west.add(update);
-        company_p_west.add(delete);
-        
-//        company_p_center.add(search_tf);
-//        company_p_center.add(search_b);
-        
-        company_p.add(company_p_west , BorderLayout.WEST);
-        company_p.add(company_p_center , BorderLayout.CENTER);
- 
+
+        companyPanel.add(westPanel, BorderLayout.WEST);
+        companyPanel.add(centerPanel, BorderLayout.CENTER);
     }
-    public void actionPerformed(ActionEvent ae) 
-    {
-        if(ae.getSource() == add)
-        {
-            JDialog add_db =new JDialog(Admin_GUI.frame,"Add to Drugs List",false);
-            
-            add_db.setLayout(null);
-            
-            add_name = new JLabel("Name :");
-            add_address = new JLabel("Address :");
-            add_phone_no = new JLabel("Phone No.");
-            add_name_tf = new JTextField(20);
-            add_address_tf = new JTextField(20);
-            add_phone_no_tf = new JTextField(20);
-            add_b = new JButton("Add");
-            
-            add_b.setForeground(new Color(255,250,250));
-            add_b.setBackground(new Color(0,0,0));
-            
-            add_name.setBounds(110, 40, 150, 30);
-            add_address.setBounds(110, 90, 150, 30);
-            add_phone_no.setBounds(110, 140, 150, 30);
-            
-            add_name_tf.setBounds(220, 40, 150, 25);
-            add_address_tf.setBounds(220, 90, 150, 30);
-            add_phone_no_tf.setBounds(220, 140, 150, 30);
 
-            add_b.setBounds(200, 200, 80, 30);
-            
-            add_b.addActionListener(this);
-            
-            add_name.setFont(f);
-            add_address.setFont(f);
-            add_phone_no.setFont(f);
-            
-            add_name_tf.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-            add_address_tf.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-            add_phone_no_tf.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-            
-            add_db.add(add_name);
-            add_db.add(add_address);
-            add_db.add(add_phone_no);
-            
-            add_db.add(add_name_tf);
-            add_db.add(add_address_tf);
-            add_db.add(add_phone_no_tf);
+    private void applySearch(String text) {
+        String trimmed = text.trim();
+        sorter.setRowFilter(trimmed.isEmpty() ? null : RowFilter.regexFilter("(?i)" + trimmed));
+    }
 
-            add_db.add(add_b);
-            
-            add_db.getContentPane().setBackground(new Color(152, 251, 152));
-            add_db.getRootPane().setBorder(BorderFactory.createMatteBorder(5, 5, 5, 5, new Color(0, 128, 0)));
-            add_db.setVisible(true);
-            add_db.setSize(500,280); 
-            add_db.setLocationRelativeTo(null);
+    private JTable loadTable(String sql) {
+        List<String> columnNames = new ArrayList<>();
+        List<List<Object>> data = new ArrayList<>();
+        try (Connection con = DBConnection.getConnection();
+             Statement stmt = con.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            ResultSetMetaData md = rs.getMetaData();
+            int cols = md.getColumnCount();
+            for (int i = 1; i <= cols; i++) columnNames.add(md.getColumnName(i));
+            while (rs.next()) {
+                List<Object> row = new ArrayList<>(cols);
+                for (int i = 1; i <= cols; i++) row.add(rs.getObject(i));
+                data.add(row);
+            }
+        } catch (SQLException e) { System.out.println(e.getMessage()); }
+        Vector<String> colVec = new Vector<>(columnNames);
+        Vector<Vector<Object>> dataVec = new Vector<>();
+        for (List<Object> row : data) dataVec.add(new Vector<>(row));
+        return new JTable(dataVec, colVec) {
+            @Override public Class<?> getColumnClass(int col) {
+                for (int row = 0; row < getRowCount(); row++) {
+                    Object o = getValueAt(row, col);
+                    if (o != null) return o.getClass();
+                }
+                return Object.class;
+            }
+        };
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent ae) {
+        if (ae.getSource() == add)            showAddDialog();
+        else if (ae.getSource() == addBtn)    handleAdd();
+        else if (ae.getSource() == delete)    handleDelete();
+        else if (ae.getSource() == update)    showUpdateDialog();
+        else if (ae.getSource() == updateBtn) handleUpdate();
+    }
+
+    private void showAddDialog() {
+        JDialog dialog = new JDialog(Admin_GUI.frame, "Add Company", true);
+        dialog.setSize(440, 340);
+        dialog.setLocationRelativeTo(Admin_GUI.frame);
+        dialog.setLayout(new BorderLayout());
+
+        JPanel form = UITheme.createFormPanel();
+        addNameTf    = UITheme.createTextField();
+        addAddressTf = UITheme.createTextField();
+        addPhoneNoTf = UITheme.createTextField();
+
+        form.add(UITheme.createFormLabel("Name"),      UITheme.labelConstraints(0));
+        form.add(addNameTf,                             UITheme.fieldConstraints(0));
+        form.add(UITheme.createFormLabel("Address"),   UITheme.labelConstraints(1));
+        form.add(addAddressTf,                          UITheme.fieldConstraints(1));
+        form.add(UITheme.createFormLabel("Phone No."), UITheme.labelConstraints(2));
+        form.add(addPhoneNoTf,                          UITheme.fieldConstraints(2));
+
+        addBtn = UITheme.createPrimaryButton("Add Company");
+        addBtn.addActionListener(this);
+        JButton cancel = UITheme.createButton("Cancel", new Color(100, 116, 139), new Color(71, 85, 105));
+        cancel.addActionListener(e -> dialog.dispose());
+
+        dialog.add(UITheme.createSectionHeader("Add New Company"), BorderLayout.NORTH);
+        dialog.add(form, BorderLayout.CENTER);
+        dialog.add(UITheme.createDialogButtonPanel(cancel, addBtn), BorderLayout.SOUTH);
+        UITheme.styleDialog(dialog);
+        dialog.setVisible(true);
+    }
+
+    private void handleAdd() {
+        if (addNameTf.getText().isEmpty() || addAddressTf.getText().isEmpty() || addPhoneNoTf.getText().isEmpty()) {
+            JOptionPane.showMessageDialog(Admin_GUI.frame, "Please fill in all fields.", "Company — Add", JOptionPane.WARNING_MESSAGE);
+            return;
         }
-        else if(ae.getSource() == add_b)
-        {
-            if(add_name_tf.getText().equals("") || add_address_tf.getText().equals("") || add_phone_no_tf.getText().equals(""))
-            {
-                JOptionPane.showMessageDialog(Admin_GUI.frame, "Empty field cann't be added","Add Error",JOptionPane.ERROR_MESSAGE);
-            }
-            else
-            {
-                try
-                {
-                    Class.forName("com.mysql.cj.jdbc.Driver");
-                    Connection con = DriverManager.getConnection(url , uname , pass);   
-                    Statement st = con.createStatement();
-                    st.execute("INSERT INTO `mm_company`(`Name`, `Address`, `Phone No.`) VALUES ('"+add_name_tf.getText()+"','"+add_address_tf.getText()+"','"+add_phone_no_tf.getText()+"');");
-                    st.close();
-                    con.close();
-                }
-                catch(Exception e)
-                {
-                    System.out.println(e);
-                }
-                add_name_tf.setText("");
-                add_address_tf.setText("");
-                add_phone_no_tf.setText("");
-                new Admin_GUI_company();
-                JOptionPane.showMessageDialog(Admin_GUI.frame,"Successfully Added.","Add Information.",JOptionPane.INFORMATION_MESSAGE); 
-            }          
+        try (Connection con = DBConnection.getConnection()) {
+            PreparedStatement ps = con.prepareStatement(
+                "INSERT INTO `mm_company`(`Name`, `Address`, `Phone No.`) VALUES (?, ?, ?)");
+            ps.setString(1, addNameTf.getText());
+            ps.setString(2, addAddressTf.getText());
+            ps.setString(3, addPhoneNoTf.getText());
+            ps.executeUpdate(); ps.close();
+        } catch (Exception e) { System.out.println(e); }
+        new Admin_GUI_company();
+        JOptionPane.showMessageDialog(Admin_GUI.frame, "Company added successfully.", "Company — Add", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void handleDelete() {
+        if (companyList.getSelectedRow() == -1) {
+            JOptionPane.showMessageDialog(Admin_GUI.frame, "Please select a row first.", "Company — Delete", JOptionPane.WARNING_MESSAGE);
+            return;
         }
-        else if(ae.getSource() == delete)
-        {
-            if(company_list.getSelectedRow() != -1) 
-            {
-                try
-                {
-                    String name = company_list.getModel().getValueAt(company_list.getSelectedRow(), 0).toString();
-                    String sql = "DELETE FROM `mm_company` WHERE Name = \""+name+"\";";
-                    Class.forName("com.mysql.cj.jdbc.Driver");
-                    Connection con = DriverManager.getConnection(url , uname , pass);   
-                    Statement st = con.createStatement();
-                    st.executeUpdate(sql);
-                    st.close();
-                    con.close();
-                }
-                catch(Exception e)
-                {
-                    System.out.println(e);
-                }
-                new Admin_GUI_company();
-                JOptionPane.showMessageDialog(Admin_GUI.frame,"Successfully Deleted.","Delete Information",JOptionPane.INFORMATION_MESSAGE); 
-            }
-            else
-            {
-                JOptionPane.showMessageDialog(Admin_GUI.frame,"Select Row First.","Delete Error",JOptionPane.ERROR_MESSAGE); 
-            }
-            
+        int confirm = JOptionPane.showConfirmDialog(Admin_GUI.frame, "Delete this company?", "Confirm Delete", JOptionPane.YES_NO_OPTION);
+        if (confirm != JOptionPane.YES_OPTION) return;
+
+        try (Connection con = DBConnection.getConnection()) {
+            int modelRow = companyList.convertRowIndexToModel(companyList.getSelectedRow());
+            String name = companyList.getModel().getValueAt(modelRow, 0).toString();
+            PreparedStatement ps = con.prepareStatement("DELETE FROM `mm_company` WHERE Name = ?");
+            ps.setString(1, name); ps.executeUpdate(); ps.close();
+        } catch (Exception e) { System.out.println(e); }
+        new Admin_GUI_company();
+        JOptionPane.showMessageDialog(Admin_GUI.frame, "Company deleted successfully.", "Company — Delete", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void showUpdateDialog() {
+        int rowNo = companyList.getSelectedRow();
+        if (rowNo == -1) {
+            JOptionPane.showMessageDialog(Admin_GUI.frame, "Please select a row first.", "Company — Update", JOptionPane.WARNING_MESSAGE);
+            return;
         }
-        else if(ae.getSource() == update)
-        {
-            int row_no = company_list.getSelectedRow();
-            if(row_no == -1)
-            {
-                 JOptionPane.showMessageDialog(Admin_GUI.frame, "Select Row First","Update Error",JOptionPane.ERROR_MESSAGE);
-            }
-            else
-            {
-                JDialog update_db =new JDialog(Admin_GUI.frame,"Update to Drugs List",false);
-            
-                update_db.setLayout(null);
+        int modelRow = companyList.convertRowIndexToModel(rowNo);
+        JDialog dialog = new JDialog(Admin_GUI.frame, "Update Company", true);
+        dialog.setSize(440, 340);
+        dialog.setLocationRelativeTo(Admin_GUI.frame);
+        dialog.setLayout(new BorderLayout());
 
-                update_name = new JLabel("Name :");
-                update_address = new JLabel("Type :");
-                update_phone_no = new JLabel("Phone No.:");
+        JPanel form = UITheme.createFormPanel();
+        updateNameTf    = UITheme.createTextField();
+        updateAddressTf = UITheme.createTextField();
+        updatePhoneNoTf = UITheme.createTextField();
 
-                update_name_tf = new JTextField(20);
-                update_address_tf = new JTextField(20);
-                update_phone_no_tf = new JTextField(20);
+        updateNameTf.setText(companyList.getModel().getValueAt(modelRow, 0).toString());
+        updateAddressTf.setText(companyList.getModel().getValueAt(modelRow, 1).toString());
+        updatePhoneNoTf.setText(companyList.getModel().getValueAt(modelRow, 2).toString());
 
-                update_b = new JButton("Update");
+        form.add(UITheme.createFormLabel("Name"),      UITheme.labelConstraints(0));
+        form.add(updateNameTf,                          UITheme.fieldConstraints(0));
+        form.add(UITheme.createFormLabel("Address"),   UITheme.labelConstraints(1));
+        form.add(updateAddressTf,                       UITheme.fieldConstraints(1));
+        form.add(UITheme.createFormLabel("Phone No."), UITheme.labelConstraints(2));
+        form.add(updatePhoneNoTf,                       UITheme.fieldConstraints(2));
 
-                update_name_tf.setText(company_list.getModel().getValueAt(row_no, 0).toString());
-                update_address_tf.setText(company_list.getModel().getValueAt(row_no, 1).toString());
-                update_phone_no_tf.setText(company_list.getModel().getValueAt(row_no, 2).toString());
+        updateBtn = UITheme.createWarningButton("Save Changes");
+        updateBtn.addActionListener(this);
+        JButton cancel = UITheme.createButton("Cancel", new Color(100, 116, 139), new Color(71, 85, 105));
+        cancel.addActionListener(e -> dialog.dispose());
 
-                update_b.setForeground(new Color(255,250,250));
-                update_b.setBackground(new Color(0,0,0));
+        dialog.add(UITheme.createSectionHeader("Update Company"), BorderLayout.NORTH);
+        dialog.add(form, BorderLayout.CENTER);
+        dialog.add(UITheme.createDialogButtonPanel(cancel, updateBtn), BorderLayout.SOUTH);
+        UITheme.styleDialog(dialog);
+        dialog.setVisible(true);
+    }
 
-                update_name.setBounds(110, 40, 150, 30);
-                update_address.setBounds(110, 90, 150, 30);
-                update_phone_no.setBounds(110, 140, 170, 30);
-
-                update_name_tf.setBounds(220, 40, 150, 25);
-                update_address_tf.setBounds(220, 90, 150, 30);
-                update_phone_no_tf.setBounds(220, 140, 150, 30);
-
-                update_b.setBounds(200, 200, 80, 30);
-
-                update_b.addActionListener(this);
-
-                update_name.setFont(f);
-                update_address.setFont(f);
-                update_phone_no.setFont(f);
-
-                update_name_tf.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-                update_address_tf.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-                update_phone_no_tf.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-
-                update_db.add(update_name);
-                update_db.add(update_address);
-                update_db.add(update_phone_no);
-
-                update_db.add(update_name_tf);
-                update_db.add(update_address_tf);
-                update_db.add(update_phone_no_tf);
-
-                update_db.add(update_b);
-
-                update_db.getContentPane().setBackground(new Color(152, 251, 152));
-                update_db.getRootPane().setBorder(BorderFactory.createMatteBorder(5, 5, 5, 5, new Color(0, 128, 0)));
-                update_db.setVisible(true);
-                update_db.setSize(500,280);
-                update_db.setLocationRelativeTo(null);
-            }
-             
+    private void handleUpdate() {
+        if (updateNameTf.getText().isEmpty() || updateAddressTf.getText().isEmpty() || updatePhoneNoTf.getText().isEmpty()) {
+            JOptionPane.showMessageDialog(Admin_GUI.frame, "Please fill in all fields.", "Company — Update", JOptionPane.WARNING_MESSAGE);
+            return;
         }
-        else if(ae.getSource() == update_b)
-        {
-            if(update_name_tf.getText().equals("") || update_address_tf.getText().equals("") || update_phone_no_tf.getText().equals(""))
-            {
-                JOptionPane.showMessageDialog(Admin_GUI.frame, "Empty field cann't be added","Add Error",JOptionPane.ERROR_MESSAGE);
-            }
-            else if(company_list.getSelectedRow() != -1)
-            {
-                try
-                {
-                    String name = company_list.getModel().getValueAt(company_list.getSelectedRow(), 0).toString();
-                    String sql = "UPDATE `mm_company` SET `Name`='"+update_name_tf.getText()+"',`Address`='"+update_address_tf.getText()+"',`Phone No.`='"+update_phone_no_tf.getText()+"' WHERE Name = \""+name+"\";";
-                    Class.forName("com.mysql.cj.jdbc.Driver");
-                    Connection con = DriverManager.getConnection(url , uname , pass);   
-                    Statement st = con.createStatement();
-                    st.executeUpdate(sql);
-                    st.close();
-                    con.close();
-                }
-                catch(Exception e)
-                {
-                    System.out.println(e);
-                }
-                new Admin_GUI_company();
-                JOptionPane.showMessageDialog(Admin_GUI.frame,"Row Updated.","Update Error",JOptionPane.INFORMATION_MESSAGE); 
-            }
-            else
-            {
-                JOptionPane.showMessageDialog(Admin_GUI.frame,"Select Row First.","Update",JOptionPane.ERROR_MESSAGE); 
-            }
+        if (companyList.getSelectedRow() == -1) {
+            JOptionPane.showMessageDialog(Admin_GUI.frame, "Please select a row first.", "Company — Update", JOptionPane.WARNING_MESSAGE);
+            return;
         }
-                
+        try (Connection con = DBConnection.getConnection()) {
+            int modelRow = companyList.convertRowIndexToModel(companyList.getSelectedRow());
+            String originalName = companyList.getModel().getValueAt(modelRow, 0).toString();
+            PreparedStatement ps = con.prepareStatement(
+                "UPDATE `mm_company` SET `Name`=?, `Address`=?, `Phone No.`=? WHERE Name = ?");
+            ps.setString(1, updateNameTf.getText());
+            ps.setString(2, updateAddressTf.getText());
+            ps.setString(3, updatePhoneNoTf.getText());
+            ps.setString(4, originalName);
+            ps.executeUpdate(); ps.close();
+        } catch (Exception e) { System.out.println(e); }
+        new Admin_GUI_company();
+        JOptionPane.showMessageDialog(Admin_GUI.frame, "Company updated successfully.", "Company — Update", JOptionPane.INFORMATION_MESSAGE);
     }
 }

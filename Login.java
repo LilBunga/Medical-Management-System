@@ -1,148 +1,168 @@
 package com.project;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Image;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import javax.swing.BorderFactory;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JPasswordField;
-import javax.swing.JTextField;
-import javax.swing.UIDefaults;
-import javax.swing.UIManager;
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
+import javax.swing.border.*;
 
-public class Login implements ActionListener
-{
-    JFrame frame ;
-    JPanel center , north ;
-    JTextField username_tf ;
-    JPasswordField password_tf;
-    JButton submit  , back;
-    JLabel header , logo , username , password , uname , pass , medicine1 , medicine2;
-    Login()
-    {
-        frame = new JFrame();
-        center = new JPanel();
-        north = new JPanel();
-        
-        username_tf = new JTextField();
-        password_tf = new JPasswordField();
-        username = new JLabel("Username :");
-        password = new JLabel("Password :");
-        submit = new JButton("Submit");
-        back = new JButton("Back");
-        header = new JLabel("Medical Management System");
-        logo = new JLabel(new ImageIcon(new ImageIcon("D:\\uni\\sem 3\\LEC\\Object Oriented Programming\\final project\\medical mng sys\\Medical-management-system-main\\src\\logo.png").getImage().getScaledInstance(60,50, Image.SCALE_DEFAULT)));
-        medicine1 = new JLabel(new ImageIcon(new ImageIcon("").getImage().getScaledInstance(512,512, Image.SCALE_DEFAULT)));
-        medicine2 = new JLabel(new ImageIcon(new ImageIcon("D:\\uni\\sem 3\\LEC\\Object Oriented Programming\\final project\\medical mng sys\\Medical-management-system-main\\src\\medical.png").getImage().getScaledInstance(512,512, Image.SCALE_DEFAULT)));
-        uname = new JLabel("admin");
-        pass = new JLabel("admin");
-        
-        submit.setForeground(new Color(255,250,250));
-        submit.setBackground(new Color(0,0,0));
-        back.setForeground(new Color(255,250,250));
-        back.setBackground(new Color(0,0,0));
-        
-        //---------set font to labels------------------------ 
-        header.setFont(new Font("Bebas Neue" , Font.BOLD , 45));
-        username.setFont(new Font("Bebas Neue" , Font.PLAIN , 17));
-        password.setFont(new Font("Bebas Neue" , Font.PLAIN , 17));
-        
-        //------------set layout to frame , center(center panel) and north(north panel)-------
-        frame.setLayout(new BorderLayout(7,7));
-        center.setLayout(null);
-        north.setLayout(null);
-        
-        //------------------set tooltip to username_tf and password_tf on center panel------------
-        username_tf.setToolTipText("Enter username"); 
-        password_tf.setToolTipText("Enter password"); 
-        
-        submit.addActionListener(this);
-        back.addActionListener(this);
-        
-        username_tf.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-        password_tf.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-        
-        //------------------set bounds to components on center panel------------
-        username.setBounds(450, 170, 100, 25);
-        password.setBounds(450, 230, 100, 25);
-        username_tf.setBounds(600, 170, 200, 25);
-        password_tf.setBounds(600, 230, 200, 25);
-        back.setBounds(500, 285, 80, 30);
-        submit.setBounds(650, 285, 80, 30);
-        medicine1.setBounds(0, 20, 512, 512);
-        medicine2.setBounds(765, 20, 512, 512);
-        
-        logo.setBounds(300,15, 80, 70);
-        header.setBounds(380, 15, 800, 70);
-        
-        //----------------add coponents on center panel (north)-------------
-        north.add(header);
-        north.add(logo);
-        
-        //------------------set border to components on center panel------------
-        center.setBorder(BorderFactory.createMatteBorder(7, 7, 7, 7, new Color(0, 128, 0)));
-        north.setBorder(BorderFactory.createMatteBorder(7, 7, 7, 7, new Color(0, 128, 0)));
-        username_tf.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-        password_tf.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-        
-        //----------------add coponents on center panel (center)-------------
-        center.add(username_tf);
-        center.add(password_tf);
-        center.add(submit);
-        center.add(back);
-        center.add(username);
-        center.add(password);
-        center.add(medicine1);
-        center.add(medicine2);
-        
-        //------------------set background to panels in frame-------------------------
-        center.setBackground(new Color(152, 251, 152));
-        north.setBackground(new Color(152, 251, 152));
-        
-        //---------------------set size to panels in frame-------------------------
-        north.setPreferredSize(new Dimension(100,100));
-        
-        //-----------------------add panel to frame-------------------------
-        frame.add(center , BorderLayout.CENTER);
-        frame.add(north , BorderLayout.NORTH);
-        
-        //--------------- frame settings -------------------    
+public class Login implements ActionListener {
+    private static final String VALID_USERNAME = "admin";
+    private static final String VALID_PASSWORD = "admin";
+
+    private JFrame frame;
+    private JTextField usernameTf;
+    private JPasswordField passwordTf;
+    private JButton submit, back;
+
+    Login() {
+        frame = new JFrame("Medical Management System — Login");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+        frame.setLayout(new BorderLayout());
+
+        // Full-screen background
+        JPanel bg = new JPanel(new GridBagLayout()) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D) g;
+                g2.setPaint(new GradientPaint(0, 0, new Color(15, 23, 42), getWidth(), getHeight(), new Color(30, 58, 138)));
+                g2.fillRect(0, 0, getWidth(), getHeight());
+            }
+        };
+
+        // Login card
+        JPanel card = new JPanel(new BorderLayout(0, 0));
+        card.setBackground(UITheme.CARD_BG);
+        card.setPreferredSize(new Dimension(420, 500));
+        card.setBorder(BorderFactory.createLineBorder(UITheme.BORDER, 1));
+
+        // Card top accent
+        JPanel accent = new JPanel();
+        accent.setBackground(UITheme.PRIMARY);
+        accent.setPreferredSize(new Dimension(0, 5));
+        card.add(accent, BorderLayout.NORTH);
+
+        // Card content
+        JPanel content = new JPanel();
+        content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
+        content.setBackground(UITheme.CARD_BG);
+        content.setBorder(new EmptyBorder(36, 40, 36, 40));
+
+        // Logo / title area
+        JLabel appTitle = new JLabel("MedManage");
+        appTitle.setFont(new Font("Segoe UI", Font.BOLD, 28));
+        appTitle.setForeground(UITheme.PRIMARY);
+        appTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JLabel subtitle = new JLabel("Medical Management System");
+        subtitle.setFont(UITheme.FONT_BODY);
+        subtitle.setForeground(UITheme.TEXT_MUTED);
+        subtitle.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JSeparator sep = new JSeparator();
+        sep.setForeground(UITheme.BORDER);
+        sep.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
+
+        JLabel signInLabel = new JLabel("Sign in to your account");
+        signInLabel.setFont(UITheme.FONT_H2);
+        signInLabel.setForeground(UITheme.TEXT_PRIMARY);
+        signInLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        // Form fields
+        JLabel userLabel = UITheme.createFormLabel("Username");
+        userLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        usernameTf = UITheme.createTextField();
+        usernameTf.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+        usernameTf.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JLabel passLabel = UITheme.createFormLabel("Password");
+        passLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        passwordTf = new JPasswordField();
+        passwordTf.setFont(UITheme.FONT_BODY);
+        passwordTf.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(UITheme.BORDER, 1),
+            new EmptyBorder(7, 10, 7, 10)
+        ));
+        passwordTf.setBackground(Color.WHITE);
+        passwordTf.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+        passwordTf.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        // Enter key submits
+        passwordTf.addActionListener(this);
+        usernameTf.addActionListener(this);
+
+        submit = UITheme.createPrimaryButton("Sign In");
+        submit.setMaximumSize(new Dimension(Integer.MAX_VALUE, 42));
+        submit.setAlignmentX(Component.LEFT_ALIGNMENT);
+        submit.addActionListener(this);
+
+        back = UITheme.createButton("Back to Welcome", new Color(100, 116, 139), new Color(71, 85, 105));
+        back.setMaximumSize(new Dimension(Integer.MAX_VALUE, 38));
+        back.setAlignmentX(Component.LEFT_ALIGNMENT);
+        back.addActionListener(this);
+
+        content.add(appTitle);
+        content.add(Box.createVerticalStrut(4));
+        content.add(subtitle);
+        content.add(Box.createVerticalStrut(24));
+        content.add(sep);
+        content.add(Box.createVerticalStrut(24));
+        content.add(signInLabel);
+        content.add(Box.createVerticalStrut(24));
+        content.add(userLabel);
+        content.add(Box.createVerticalStrut(6));
+        content.add(usernameTf);
+        content.add(Box.createVerticalStrut(16));
+        content.add(passLabel);
+        content.add(Box.createVerticalStrut(6));
+        content.add(passwordTf);
+        content.add(Box.createVerticalStrut(24));
+        content.add(submit);
+        content.add(Box.createVerticalStrut(10));
+        content.add(back);
+
+        card.add(content, BorderLayout.CENTER);
+
+        // Footer inside bg
+        JLabel footer = new JLabel("Final Project — Medical Management System");
+        footer.setFont(UITheme.FONT_SMALL);
+        footer.setForeground(new Color(100, 116, 139));
+        footer.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JPanel cardWrapper = new JPanel();
+        cardWrapper.setLayout(new BoxLayout(cardWrapper, BoxLayout.Y_AXIS));
+        cardWrapper.setOpaque(false);
+        cardWrapper.add(card);
+        cardWrapper.add(Box.createVerticalStrut(16));
+        cardWrapper.add(footer);
+
+        bg.add(cardWrapper);
+        frame.add(bg, BorderLayout.CENTER);
         frame.setVisible(true);
     }
-    public void actionPerformed(ActionEvent ae)
-    {
-        if(ae.getSource() == submit)
-        {
-            if( username_tf.getText().equals(uname.getText())  && password_tf.getText().equals(pass.getText()))
-            {
-                new Admin_GUI();
-                frame.dispose();
-            }
-            else if(username_tf.getText().equals("")  || password_tf.getText().equals(""))
-            {
-                JOptionPane.showMessageDialog(null, "Use can't place fields empty.");
-            }
-            else
-            {
-                JOptionPane.showMessageDialog(null, "Username or Password is Invalid.");
-            }
-            
-        }
-        else if(ae.getSource() == back)
-        {
+
+    @Override
+    public void actionPerformed(ActionEvent ae) {
+        if (ae.getSource() == back) {
             new Welcome();
             frame.dispose();
+            return;
+        }
+
+        String enteredUser = usernameTf.getText().trim();
+        String enteredPass = new String(passwordTf.getPassword());
+
+        if (enteredUser.isEmpty() || enteredPass.isEmpty()) {
+            JOptionPane.showMessageDialog(frame, "Please enter both username and password.", "Login", JOptionPane.WARNING_MESSAGE);
+        } else if (enteredUser.equals(VALID_USERNAME) && enteredPass.equals(VALID_PASSWORD)) {
+            new Admin_GUI();
+            frame.dispose();
+        } else {
+            JOptionPane.showMessageDialog(frame, "Invalid username or password.", "Login Failed", JOptionPane.ERROR_MESSAGE);
+            passwordTf.setText("");
         }
     }
 }

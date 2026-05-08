@@ -1,266 +1,301 @@
 package com.project;
 
-import java.awt.BorderLayout;
-import java.awt.CardLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Font;
-import java.awt.Image;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import javax.swing.BorderFactory;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JDialog;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
+import java.awt.*;
+import java.awt.event.*;
+import java.sql.*;
+import javax.swing.*;
+import javax.swing.border.*;
 
-public class Admin_GUI implements ActionListener 
-{
-    static JPanel center , west , north , south ,sales_p ,user_p ;
-    static JFrame frame ;
-    JButton logout , drugs , company , warning , sales ;
-    CardLayout c ;
-    static JLabel logo , name , footer , bg ;
-    JLabel about_us ;
-    Admin_GUI()
-    {
-        c = new CardLayout();
-        frame = new JFrame();
-        frame.setLayout( new BorderLayout(7 , 7) );
-        
-        name = new JLabel("Medical Management System");
-        name.setFont(new Font("Josefin Sans" , Font.BOLD , 45));
-        logo = new JLabel(new ImageIcon(new ImageIcon("C:\\Users\\chetan\\OneDrive\\Desktop\\Advanced java micro-project\\src\\logo.png").getImage().getScaledInstance(60,50, Image.SCALE_DEFAULT)));
-        bg = new JLabel(new ImageIcon(new ImageIcon("C:\\Users\\chetan\\OneDrive\\Desktop\\Advanced java micro-project\\src\\bg3.jpg").getImage().getScaledInstance(1020,600, Image.SCALE_DEFAULT)));
-        about_us = new JLabel(new ImageIcon(new ImageIcon("C:\\Users\\chetan\\OneDrive\\Desktop\\Advanced java micro-project\\src\\team.png").getImage().getScaledInstance(40,40, Image.SCALE_DEFAULT)));
-        logout = new JButton("Logout");
-        drugs = new JButton("Drugs");
-        company = new JButton("Company");
-        warning = new JButton("Warning");
-        sales = new JButton("Sales");
-        footer = new JLabel("Final Project");
-        footer.setFont(new Font("Bahnschrift Light" , Font.BOLD , 22));
-        sales_p = new JPanel() ;
-        user_p = new JPanel() ;
+public class Admin_GUI implements ActionListener {
+    static JPanel center, west, north;
+    static JFrame frame;
 
-        // ---------------- sub panels of border layout ---------------
-        center = new JPanel();
+    private JButton logout, drugs, company, warning, sales;
+
+    Admin_GUI() {
+        frame = new JFrame("Medical Management System");
+        frame.setLayout(new BorderLayout(0, 0));
+
+        // === HEADER ===
+        north = new JPanel(new BorderLayout());
+        north.setBackground(UITheme.CARD_BG);
+        north.setPreferredSize(new Dimension(0, 68));
+        north.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, UITheme.BORDER));
+
+        JLabel title = new JLabel("  Medical Management System");
+        title.setFont(UITheme.FONT_TITLE);
+        title.setForeground(UITheme.TEXT_PRIMARY);
+
+        JPanel headerRight = new JPanel(new FlowLayout(FlowLayout.RIGHT, 16, 0));
+        headerRight.setBackground(UITheme.CARD_BG);
+        headerRight.setBorder(new EmptyBorder(0, 0, 0, 16));
+
+        JLabel userLabel = new JLabel("Admin");
+        userLabel.setFont(UITheme.FONT_LABEL);
+        userLabel.setForeground(UITheme.TEXT_MUTED);
+
+        JButton aboutBtn = UITheme.createButton("About Us", UITheme.PRIMARY, UITheme.PRIMARY_HOVER);
+        aboutBtn.addActionListener(e -> showAboutUs());
+
+        headerRight.add(userLabel);
+        headerRight.add(aboutBtn);
+
+        north.add(title, BorderLayout.CENTER);
+        north.add(headerRight, BorderLayout.EAST);
+
+        // === SIDEBAR ===
         west = new JPanel();
-        north = new JPanel();
-        south = new JPanel();
-        
-        west.setLayout(null);
-        north.setLayout(null);
-        center.setLayout(c);
-        south.setLayout(new FlowLayout());
-        
+        west.setLayout(new BoxLayout(west, BoxLayout.Y_AXIS));
+        west.setBackground(UITheme.SIDEBAR_BG);
+        west.setPreferredSize(new Dimension(220, 0));
+
+        // Brand
+        JPanel brand = new JPanel(new BorderLayout());
+        brand.setBackground(UITheme.SIDEBAR_BRAND);
+        brand.setMaximumSize(new Dimension(Integer.MAX_VALUE, 68));
+        brand.setPreferredSize(new Dimension(220, 68));
+        brand.setBorder(new EmptyBorder(0, 24, 0, 0));
+
+        JLabel brandName = new JLabel("MedManage");
+        brandName.setFont(UITheme.FONT_BRAND);
+        brandName.setForeground(Color.WHITE);
+
+        JLabel brandSub = new JLabel("  v1.0 — Pharmacy System");
+        brandSub.setFont(UITheme.FONT_SMALL);
+        brandSub.setForeground(UITheme.SIDEBAR_TEXT);
+
+        JPanel brandText = new JPanel();
+        brandText.setLayout(new BoxLayout(brandText, BoxLayout.Y_AXIS));
+        brandText.setBackground(UITheme.SIDEBAR_BRAND);
+        brandText.add(Box.createVerticalGlue());
+        brandText.add(brandName);
+        brandText.add(brandSub);
+        brandText.add(Box.createVerticalGlue());
+        brand.add(brandText, BorderLayout.CENTER);
+
+        // Nav separator label
+        JLabel navLabel = new JLabel("  NAVIGATION");
+        navLabel.setFont(UITheme.FONT_SMALL);
+        navLabel.setForeground(new Color(71, 85, 105));
+        navLabel.setBorder(new EmptyBorder(18, 28, 6, 0));
+        navLabel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 36));
+
+        drugs   = UITheme.createNavButton("\u25a3", "Drugs");
+        company = UITheme.createNavButton("\u25a3", "Company");
+        sales   = UITheme.createNavButton("\u25a3", "Sales");
+        warning = UITheme.createNavButton("\u25a3", "Warning");
+
         drugs.addActionListener(this);
         company.addActionListener(this);
         sales.addActionListener(this);
         warning.addActionListener(this);
+
+        // Separator
+        JSeparator sep = new JSeparator();
+        sep.setForeground(UITheme.SIDEBAR_ITEM);
+        sep.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
+
+        // Logout at bottom
+        logout = UITheme.createNavButton("\u2192", "Logout");
         logout.addActionListener(this);
-        about_us.addMouseListener(new MouseAdapter()  
-        {  
-            public void mouseClicked(MouseEvent e)  
-            {  
-                JFrame as = new JFrame();
-                JPanel as_1 = new JPanel();
-                JPanel as_2 = new JPanel();
-                JPanel as_3 = new JPanel();
-                
-                as.setLayout(new BorderLayout());
-                as_1.setLayout(null);
-                as_2.setLayout(null);
-                as_3.setLayout(null);
-                
-                Font n = new Font("Times New Roman" , Font.BOLD , 20);
-                Font r = new Font("Times New Roman" , Font.BOLD , 18);
-                
-                JLabel cn = new JLabel("Name - Patil Chetan");
-                JLabel cr = new JLabel("Roll No - 66");
-                JLabel an = new JLabel("Name - Kale Atharva");
-                JLabel ar = new JLabel("Roll No - 26");
-                JLabel sn = new JLabel("Name - Kakde Shantanu");
-                JLabel sr = new JLabel("Roll No - 25");
-                
-                cn.setFont(n);
-                an.setFont(n);
-                sn.setFont(n);
-                
-                cr.setFont(r);
-                ar.setFont(r);
-                sr.setFont(r);
-                
-                sn.setBounds(40, 30, 400, 30);
-                sr.setBounds(40, 70, 400, 30);
-                an.setBounds(40, 30, 400, 30);
-                ar.setBounds(40, 70, 400, 30);
-                cn.setBounds(40, 30, 400, 30);
-                cr.setBounds(40, 70, 400, 30);
-                
-                as_1.add(sn);
-                as_2.add(an);
-                as_3.add(cn);
-                as_1.add(sr);
-                as_2.add(ar);
-                as_3.add(cr);
 
-                as_1.setBorder(BorderFactory.createMatteBorder(7, 7, 7, 7, new Color(0, 128, 0)));
-                as_2.setBorder(BorderFactory.createMatteBorder(7, 0, 7, 7, new Color(0, 128, 0)));
-                as_3.setBorder(BorderFactory.createMatteBorder(7, 0, 7, 7, new Color(0, 128, 0)));
-                
-                as_1.setBackground(new Color(152, 251, 152));
-                as_2.setBackground(new Color(152, 251, 152));
-                as_3.setBackground(new Color(152, 251, 152));
-                
-                as_1.setPreferredSize(new Dimension(300 , 300));
-                as_2.setPreferredSize(new Dimension(300 , 300));
-                as_3.setPreferredSize(new Dimension(300 , 300));
-                
-                as.add(as_1 , BorderLayout.LINE_START);
-                as.add(as_2 , BorderLayout.CENTER);
-                as.add(as_3 , BorderLayout.LINE_END);
-                
-                as.setSize(900,200);
-                as.setTitle("About Us");
-                as.setVisible(true);
-                as.setLocationRelativeTo(null);
-            }  
-        }); 
-
-        logo.setBounds(300,15, 80, 70);
-        name.setBounds(380, 15, 800, 70);
-        
-        north.add(logo);
-        north.add(name);
-        north.add(about_us);
-        
-        drugs.setBounds(80, 72, 90, 30);
-        company.setBounds(80, 150, 90, 30);
-        sales.setBounds(80, 220, 90, 30);
-        warning.setBounds(80, 290, 90, 30);
-        logout.setBounds(80, 360, 90, 30);
-        bg.setBounds(0, 0, 1020, 600);
-        about_us.setBounds(60, 25, 40, 40);
-        
-        center.add(bg);
+        west.add(brand);
+        west.add(navLabel);
         west.add(drugs);
-        west.add(warning);
-        west.add(sales);
         west.add(company);
+        west.add(sales);
+        west.add(warning);
+        west.add(Box.createVerticalGlue());
+        west.add(sep);
         west.add(logout);
-        
-        south.add(footer);
-        
-        logout.setForeground(new Color(255,250,250));
-        logout.setBackground(new Color(0,0,0));
-        drugs.setForeground(new Color(255,250,250));
-        drugs.setBackground(new Color(0,0,0));
-        company.setForeground(new Color(255,250,250));
-        company.setBackground(new Color(0,0,0));
-        sales.setForeground(new Color(255,250,250));
-        sales.setBackground(new Color(0,0,0));
-        warning.setForeground(new Color(255,250,250));
-        warning.setBackground(new Color(0,0,0));
-        
-        center.setBorder(BorderFactory.createMatteBorder(7, 7, 7, 7, new Color(0, 128, 0)));
-        west.setBorder(BorderFactory.createMatteBorder(7, 7, 7, 7, new Color(0, 128, 0)));
-        north.setBorder(BorderFactory.createMatteBorder(7, 7, 7, 7, new Color(0, 128, 0)));
-        south.setBorder(BorderFactory.createMatteBorder(7, 7, 7, 7, new Color(0, 128, 0)));
-        
-        
-        user_p.setBackground(new Color(152, 251, 152));
-        sales_p.setBackground(new Color(152, 251, 152));
-        
-        // ---------------- set bg to sub panels of border layout ---------------
-        center.setBackground(new Color(152, 251, 152));
-        west.setBackground(new Color(152, 251, 152));
-        north.setBackground(new Color(152, 251, 152));
-        south.setBackground(new Color(152, 251, 152));
-        
-        // ---------------- set prefered size to sub panels of border layout ---------------
-        north.setPreferredSize(new Dimension(100,100));
-        west.setPreferredSize(new Dimension(250,100));
-        south.setPreferredSize(new Dimension(100,70));
-        
-        // ---------------- add sub panels of border layout ---------------
-        frame.add(north,BorderLayout.NORTH);
-        frame.add(south,BorderLayout.SOUTH);
-	frame.add(center,BorderLayout.CENTER);
-	frame.add(west,BorderLayout.WEST);
-              
+        west.add(Box.createVerticalStrut(10));
+
+        // === CENTER ===
+        center = new JPanel(new BorderLayout());
+        center.setBackground(UITheme.CONTENT_BG);
+        showDashboard();
+
+        // === FRAME ===
+        frame.add(north, BorderLayout.NORTH);
+        frame.add(west, BorderLayout.WEST);
+        frame.add(center, BorderLayout.CENTER);
+
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+        frame.setMinimumSize(new Dimension(1000, 600));
         frame.setVisible(true);
-    
     }
 
-    public void actionPerformed(ActionEvent e) 
-    {
-        if(e.getSource() == drugs)
-        {
-            new Admin_GUI_drugs();
-        }
-        else if(e.getSource() == company)
-        {
-            new Admin_GUI_company();
-        }
-        else if(e.getSource() == sales)
-        {
-            new Admin_GUI_sales();
-        }
-        else if(e.getSource() == warning)
-        {
-            new Admin_GUI_warning();
-        }
-        else if(e.getSource() == logout)
-        {
-            JDialog logout_db =new JDialog(frame,"logout",false);
-            JLabel logout_l = new JLabel("Really want to logout?" );
-            JButton yes = new JButton("Yes");
-            JButton no = new JButton("No");
-            
-            logout_db.setLayout(null);
-            
-            logout_l.setFont(new Font("Bebas Neue" , Font.BOLD , 17));
-            
-            yes.setForeground(new Color(255,250,250));
-            yes.setBackground(new Color(0,0,0));
-            no.setForeground(new Color(255,250,250));
-            no.setBackground(new Color(0,0,0));
-            
-            logout_l.setBounds(100, 30, 200, 30);
-            yes.setBounds(105, 80, 70, 30);
-            no.setBounds(205, 80, 70, 30);
-            
-            yes.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    frame.dispose(); 
-                    frame.setVisible(false);
-                }
-            });
-            no.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    logout_db.dispose(); 
-                    logout_db.setVisible(false);
-                }
-            });
+    private void showDashboard() {
+        center.removeAll();
 
-            logout_db.add(logout_l);
-            logout_db.add(yes);
-            logout_db.add(no);
-            
-            logout_db.getContentPane().setBackground(new Color(152, 251, 152));
-            logout_db.setVisible(true);
-            logout_db.setSize(400 , 200);
-            logout_db.setLocationRelativeTo(null);
+        JPanel dashboard = new JPanel(new BorderLayout(0, 0));
+        dashboard.setBackground(UITheme.CONTENT_BG);
+
+        // Dashboard header
+        JPanel header = UITheme.createSectionHeader("Dashboard");
+        dashboard.add(header, BorderLayout.NORTH);
+
+        // Stat cards
+        JPanel statsArea = new JPanel(new GridLayout(1, 3, 20, 0));
+        statsArea.setBackground(UITheme.CONTENT_BG);
+        statsArea.setBorder(new EmptyBorder(24, 24, 24, 24));
+
+        String drugCount = "—", companyCount = "—", salesCount = "—";
+        try (Connection con = DBConnection.getConnection();
+             Statement st = con.createStatement()) {
+            try (ResultSet rs = st.executeQuery("SELECT COUNT(*) FROM mm_drugs")) {
+                if (rs.next()) drugCount = rs.getString(1);
+            }
+            try (ResultSet rs = st.executeQuery("SELECT COUNT(*) FROM mm_company")) {
+                if (rs.next()) companyCount = rs.getString(1);
+            }
+            try (ResultSet rs = st.executeQuery("SELECT COUNT(*) FROM mm_sales")) {
+                if (rs.next()) salesCount = rs.getString(1);
+            }
+        } catch (Exception ignored) {}
+
+        statsArea.add(UITheme.createStatCard("Total Drugs", drugCount, UITheme.PRIMARY));
+        statsArea.add(UITheme.createStatCard("Companies", companyCount, UITheme.SUCCESS));
+        statsArea.add(UITheme.createStatCard("Sales Records", salesCount, UITheme.WARNING_COLOR));
+
+        // Welcome panel
+        JPanel welcomePanel = new JPanel();
+        welcomePanel.setLayout(new BoxLayout(welcomePanel, BoxLayout.Y_AXIS));
+        welcomePanel.setBackground(UITheme.CONTENT_BG);
+        welcomePanel.setBorder(new EmptyBorder(0, 24, 24, 24));
+
+        JPanel card = new JPanel(new BorderLayout());
+        card.setBackground(UITheme.CARD_BG);
+        card.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(UITheme.BORDER, 1),
+            new EmptyBorder(30, 30, 30, 30)
+        ));
+
+        JLabel welcomeTitle = new JLabel("Welcome to Medical Management System");
+        welcomeTitle.setFont(UITheme.FONT_TITLE);
+        welcomeTitle.setForeground(UITheme.TEXT_PRIMARY);
+
+        JLabel welcomeDesc = new JLabel("<html><br>Use the sidebar navigation to manage drugs, companies, sales, and view stock warnings.<br>" +
+                "Select a menu to get started.</html>");
+        welcomeDesc.setFont(UITheme.FONT_BODY);
+        welcomeDesc.setForeground(UITheme.TEXT_MUTED);
+
+        card.add(welcomeTitle, BorderLayout.NORTH);
+        card.add(welcomeDesc, BorderLayout.CENTER);
+
+        welcomePanel.add(card);
+
+        JPanel content = new JPanel(new BorderLayout(0, 0));
+        content.setBackground(UITheme.CONTENT_BG);
+        content.add(statsArea, BorderLayout.NORTH);
+        content.add(welcomePanel, BorderLayout.CENTER);
+
+        dashboard.add(content, BorderLayout.CENTER);
+
+        center.add(dashboard, BorderLayout.CENTER);
+        center.revalidate();
+        center.repaint();
+    }
+
+    private void showAboutUs() {
+        JDialog dialog = new JDialog(frame, "About Us", true);
+        dialog.setSize(700, 280);
+        dialog.setLocationRelativeTo(frame);
+        dialog.setLayout(new BorderLayout());
+
+        JPanel header = UITheme.createSectionHeader("Development Team");
+        dialog.add(header, BorderLayout.NORTH);
+
+        JPanel content = new JPanel(new GridLayout(1, 3, 16, 0));
+        content.setBackground(UITheme.CONTENT_BG);
+        content.setBorder(new EmptyBorder(20, 20, 20, 20));
+
+        String[][] members = {
+            {"Kakde Shantanu", "Roll No. 25"},
+            {"Kale Atharva",   "Roll No. 26"},
+            {"Patil Chetan",   "Roll No. 66"}
+        };
+
+        for (String[] m : members) {
+            JPanel card = new JPanel();
+            card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+            card.setBackground(UITheme.CARD_BG);
+            card.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(0, 4, 0, 0, UITheme.PRIMARY),
+                BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(UITheme.BORDER, 1),
+                    new EmptyBorder(16, 16, 16, 16)
+                )
+            ));
+
+            JLabel name = new JLabel(m[0]);
+            name.setFont(UITheme.FONT_H2);
+            name.setForeground(UITheme.TEXT_PRIMARY);
+            name.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+            JLabel roll = new JLabel(m[1]);
+            roll.setFont(UITheme.FONT_BODY);
+            roll.setForeground(UITheme.TEXT_MUTED);
+            roll.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+            card.add(name);
+            card.add(Box.createVerticalStrut(6));
+            card.add(roll);
+            content.add(card);
         }
-    }  
+
+        JPanel btnPanel = UITheme.createDialogButtonPanel(
+            UITheme.createPrimaryButton("Close")
+        );
+        ((JButton) btnPanel.getComponent(0)).addActionListener(e -> dialog.dispose());
+
+        dialog.add(content, BorderLayout.CENTER);
+        dialog.add(btnPanel, BorderLayout.SOUTH);
+        UITheme.styleDialog(dialog);
+        dialog.setVisible(true);
+    }
+
+    private void showLogoutDialog() {
+        JDialog dialog = new JDialog(frame, "Logout", true);
+        dialog.setSize(380, 180);
+        dialog.setLocationRelativeTo(frame);
+        dialog.setLayout(new BorderLayout());
+
+        JPanel content = new JPanel(new BorderLayout());
+        content.setBackground(UITheme.CARD_BG);
+        content.setBorder(new EmptyBorder(28, 28, 20, 28));
+
+        JLabel msg = new JLabel("Are you sure you want to logout?");
+        msg.setFont(UITheme.FONT_H2);
+        msg.setForeground(UITheme.TEXT_PRIMARY);
+        content.add(msg, BorderLayout.CENTER);
+
+        JButton yes = UITheme.createDangerButton("Yes, Logout");
+        JButton no  = UITheme.createButton("Cancel", new Color(100, 116, 139), new Color(71, 85, 105));
+        yes.addActionListener(e -> frame.dispose());
+        no.addActionListener(e -> dialog.dispose());
+
+        JPanel btns = UITheme.createDialogButtonPanel(no, yes);
+
+        dialog.add(content, BorderLayout.CENTER);
+        dialog.add(btns, BorderLayout.SOUTH);
+        UITheme.styleDialog(dialog);
+        dialog.setVisible(true);
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if (e.getSource() == drugs) {
+            new Admin_GUI_drugs();
+        } else if (e.getSource() == company) {
+            new Admin_GUI_company();
+        } else if (e.getSource() == sales) {
+            new Admin_GUI_sales();
+        } else if (e.getSource() == warning) {
+            new Admin_GUI_warning();
+        } else if (e.getSource() == logout) {
+            showLogoutDialog();
+        }
+    }
 }

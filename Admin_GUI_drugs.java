@@ -1,655 +1,457 @@
 package com.project;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.PreparedStatement;
-import java.sql.Statement;
+import java.awt.*;
+import java.awt.event.*;
+import java.sql.*;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Vector;
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JDialog;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.JTextField;
-import javax.swing.RowFilter;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableModel;
-import javax.swing.table.TableRowSorter;
+import java.util.*;
+import java.util.List;
+import javax.swing.*;
+import javax.swing.border.*;
+import javax.swing.event.*;
+import javax.swing.table.*;
 
-public class Admin_GUI_drugs implements ActionListener
-{
-    JPanel drugs_p , drugs_p_west , drugs_p_center;
-    JButton delete , update , add , add_b , update_b , sales , sales_b;
-    JLabel add_name , add_type , add_price , add_expiry_date , add_company , add_shelf_number , add_quantity ;
-    JLabel update_name , update_type , update_price , update_expiry_date , update_company , update_shelf_number , update_quantity;
-    JTextField add_name_tf  , add_price_tf , add_expiry_date_tf , add_company_tf , add_shelf_number_tf , add_quantity_tf ;
-    JTextField sales_quantity_tf , update_name_tf  , update_price_tf , update_expiry_date_tf , update_company_tf , update_shelf_number_tf , update_quantity_tf ;
-    JTable drugs_list ;
-    JTextField search_tf;
-    JButton search_b;
-    JScrollPane sp ;
-    DefaultTableModel model ;
-    JComboBox add_type_cb , update_type_cb ; 
-    int i;
-    String url = "jdbc:mysql://localhost:3306/medical_management?zeroDateTimeBehavior=CONVERT_TO_NULL";
-    String uname =  "root";
-    String pass = "";
-    Font f = new Font("Bebas Neue" , Font.BOLD , 14);
-    Admin_GUI_drugs()
-    {
-        drugs_p = new JPanel();
-        
+public class Admin_GUI_drugs implements ActionListener {
+    private JPanel drugsPanel, westPanel, centerPanel;
+    private JButton delete, update, add, addBtn, updateBtn, salesOpen, salesBtn;
+    private JTextField addNameTf, addPriceTf, addExpiryDateTf, addCompanyTf, addShelfNumberTf, addQuantityTf;
+    private JTextField salesQuantityTf, updateNameTf, updatePriceTf, updateExpiryDateTf, updateCompanyTf, updateShelfNumberTf, updateQuantityTf;
+    private JTable drugsList;
+    private JScrollPane sp;
+    private JComboBox<String> addTypeCb, updateTypeCb;
+    private TableRowSorter<TableModel> sorter;
+
+    Admin_GUI_drugs() {
+        drugsPanel = new JPanel(new BorderLayout(0, 0));
+
         Admin_GUI.center.removeAll();
-        Admin_GUI.center.repaint();
+        Admin_GUI.center.add(drugsPanel, BorderLayout.CENTER);
         Admin_GUI.center.revalidate();
-        Admin_GUI.center.add(drugs_p);
-        
-        drugs_p_west = new JPanel();
-        drugs_p_center = new JPanel();
-        search_tf = new JTextField(10);
-        search_b = new JButton("Search"); 
-        delete = new JButton("Delete");
-        update = new JButton("Update");
-        add = new JButton("Add");
-        sales = new JButton("Sales");
-        drugs_p.setLayout(new BorderLayout(7 , 7));
-        drugs_p_west.setLayout(null);
-        drugs_p_center.setLayout(null);
-        
-        model = new DefaultTableModel();
-        drugs_list = new JTable(model);
-        drugs_list.setBackground(Color.LIGHT_GRAY);
-        drugs_list.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
-        sp = new JScrollPane(drugs_list , JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        
-        add.setForeground(new Color(255,250,250));
-        add.setBackground(new Color(0,0,0));
-        delete.setForeground(new Color(255,250,250));
-        delete.setBackground(new Color(0,0,0));
-        update.setForeground(new Color(255,250,250));
-        update.setBackground(new Color(0,0,0));
-        search_b.setForeground(new Color(255,250,250));
-        search_b.setBackground(new Color(0,0,0));
-        sales.setForeground(new Color(255,250,250));
-        sales.setBackground(new Color(0,0,0));
-         
-        search_tf.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-        
-        drugs_p_west.setBackground(new Color(152, 251, 152));
-        drugs_p_center.setBackground(new Color(152, 251, 152));
-        drugs_p_west.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 7, new Color(0, 128, 0)));
-        drugs_p_center.setBorder(BorderFactory.createMatteBorder(0, 7, 0, 0, new Color(0, 128, 0)));
-        drugs_p_west.setPreferredSize(new Dimension(150,0));
-        
-        ArrayList columnNames = new ArrayList();
-        ArrayList data = new ArrayList();
+        Admin_GUI.center.repaint();
 
-        String url = "jdbc:mysql://localhost:3306/medical_management?zeroDateTimeBehavior=CONVERT_TO_NULL";
-        String uname =  "root";
-        String pass = "";
-        String sql = "SELECT * FROM `mm_drugs`";
+        // === WEST: Action buttons ===
+        westPanel = new JPanel();
+        westPanel.setLayout(new BoxLayout(westPanel, BoxLayout.Y_AXIS));
+        westPanel.setBackground(UITheme.CARD_BG);
+        westPanel.setPreferredSize(new Dimension(160, 0));
+        westPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createMatteBorder(0, 0, 0, 1, UITheme.BORDER),
+            new EmptyBorder(20, 10, 20, 10)
+        ));
 
-        try (Connection connection = DriverManager.getConnection( url, uname, pass );
-            Statement stmt = connection.createStatement();
-            ResultSet rs = stmt.executeQuery( sql ))
-        {
-            ResultSetMetaData md = rs.getMetaData();
-            int columns = md.getColumnCount();
+        JLabel actionLabel = new JLabel("ACTIONS");
+        actionLabel.setFont(UITheme.FONT_SMALL);
+        actionLabel.setForeground(UITheme.TEXT_MUTED);
+        actionLabel.setBorder(new EmptyBorder(0, 6, 10, 0));
+        actionLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-            //  Get column names
-            for (int i = 1; i <= columns; i++)
-            {
-                columnNames.add( md.getColumnName(i) );
-            }
+        add       = UITheme.createPrimaryButton("Add Drug");
+        update    = UITheme.createWarningButton("Update");
+        delete    = UITheme.createDangerButton("Delete");
+        salesOpen = UITheme.createSuccessButton("Sales");
 
-            //  Get row data
-            while (rs.next())
-            {
-                ArrayList row = new ArrayList(columns);
-
-                for (int i = 1; i <= columns; i++)
-                {
-                    row.add( rs.getObject(i) );
-                }
-
-                data.add( row );
-            }
-        }
-        catch (SQLException e)
-        {
-            System.out.println( e.getMessage() );
-        }
-        Vector columnNamesVector = new Vector();
-        Vector dataVector = new Vector();
-
-        for (int i = 0; i < data.size(); i++)
-        {
-            ArrayList subArray = (ArrayList)data.get(i);
-            Vector subVector = new Vector();
-            for (int j = 0; j < subArray.size(); j++)
-            {
-                subVector.add(subArray.get(j));
-            }
-            dataVector.add(subVector);
+        for (JButton btn : new JButton[]{add, update, delete, salesOpen}) {
+            btn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 38));
+            btn.setAlignmentX(Component.LEFT_ALIGNMENT);
         }
 
-        for (int i = 0; i < columnNames.size(); i++ )
-            columnNamesVector.add(columnNames.get(i));
+        westPanel.add(actionLabel);
+        westPanel.add(add);
+        westPanel.add(Box.createVerticalStrut(8));
+        westPanel.add(update);
+        westPanel.add(Box.createVerticalStrut(8));
+        westPanel.add(delete);
+        westPanel.add(Box.createVerticalStrut(8));
+        westPanel.add(salesOpen);
+        westPanel.add(Box.createVerticalGlue());
 
-        //  Create table with database data    
-        drugs_list = new JTable(dataVector, columnNamesVector)
-        {
-            public Class getColumnClass(int column)
-            {
-                for (int row = 0; row < getRowCount(); row++)
-                {
-                    Object o = getValueAt(row, column);
+        // === CENTER ===
+        centerPanel = new JPanel(new BorderLayout(0, 0));
+        centerPanel.setBackground(UITheme.CONTENT_BG);
 
-                    if (o != null)
-                    {
-                        return o.getClass();
-                    }
-                }
+        // Toolbar with search + export
+        JTextField searchField = UITheme.createSearchField();
+        JButton exportBtn = UITheme.createButton("Export CSV", new Color(71, 85, 105), new Color(51, 65, 85));
+        exportBtn.setBorder(new EmptyBorder(6, 12, 6, 12));
 
-                return Object.class;
-            }
-        };
-        sp = new JScrollPane( drugs_list );
-        sp.setBounds(30, 50 , 800, 400);
-        drugs_p_center.add( sp );
-        
+        JPanel toolbar = UITheme.createToolbar("Drug Inventory", searchField, exportBtn);
+        centerPanel.add(toolbar, BorderLayout.NORTH);
+
+        // Table
+        drugsList = loadTable("SELECT * FROM `mm_drugs`");
+        UITheme.applyTableStyle(drugsList);
+        sp = UITheme.createScrollPane(drugsList);
+
+        JPanel tableCard = new JPanel(new BorderLayout());
+        tableCard.setBackground(UITheme.CARD_BG);
+        tableCard.setBorder(new EmptyBorder(16, 16, 16, 16));
+        tableCard.add(sp, BorderLayout.CENTER);
+        centerPanel.add(tableCard, BorderLayout.CENTER);
+
+        // Sorter & Search wiring
+        sorter = new TableRowSorter<>(drugsList.getModel());
+        drugsList.setRowSorter(sorter);
+
+        searchField.getDocument().addDocumentListener(new DocumentListener() {
+            public void insertUpdate(DocumentEvent e) { applySearch(searchField.getText()); }
+            public void removeUpdate(DocumentEvent e) { applySearch(searchField.getText()); }
+            public void changedUpdate(DocumentEvent e) { applySearch(searchField.getText()); }
+        });
+
+        exportBtn.addActionListener(e -> ExportUtils.exportToCSV(drugsList, "Drugs", Admin_GUI.frame));
+
         add.addActionListener(this);
         delete.addActionListener(this);
         update.addActionListener(this);
-        sales.addActionListener(this);
-        TableRowSorter<TableModel> sorter = new TableRowSorter<TableModel>(drugs_list.getModel());
-        drugs_list.setRowSorter(sorter);
-        search_b.addActionListener(new ActionListener() {
-          public void actionPerformed(ActionEvent e) {
-            String text = search_tf.getText();
-              if (text.trim().length() == 0) {
-                 sorter.setRowFilter(null);
-              } else {
-                 sorter.setRowFilter(RowFilter.regexFilter("(?i)" + text));
-              }
-          }
-        });
-        
-        add.setBounds(33, 100, 80, 30);
-        update.setBounds(33, 180, 80, 30);
-        delete.setBounds(33, 260, 80, 30);
-        sales.setBounds(33, 340, 80, 30);
-        
-        search_tf.setBounds(500, 10, 150, 25);
-        search_b.setBounds(680, 10, 80, 25);
-             
-        drugs_p_west.add(add);
-        drugs_p_west.add(update);
-        drugs_p_west.add(delete);
-        drugs_p_west.add(sales);
-        
-//        drugs_p_center.add(search_tf);
-//        drugs_p_center.add(search_b);
-        
-        drugs_p.add(drugs_p_west , BorderLayout.WEST);
-        drugs_p.add(drugs_p_center , BorderLayout.CENTER);
-        
+        salesOpen.addActionListener(this);
+
+        drugsPanel.add(westPanel, BorderLayout.WEST);
+        drugsPanel.add(centerPanel, BorderLayout.CENTER);
     }
-    public void actionPerformed(ActionEvent ae) 
-    {
-        if(ae.getSource() == add)
-        {
-            JDialog add_db =new JDialog(Admin_GUI.frame,"Add to Drugs List",false);
-            
-            add_db.setLayout(null);
-            
-            add_name = new JLabel("Name :");
-            add_type = new JLabel("Type :");
-            add_price = new JLabel("Price :");
-            add_expiry_date = new JLabel("Expiry Day's");
-            add_company = new JLabel("Company :");
-            add_shelf_number = new JLabel("Shelf No. :");
-            add_quantity = new JLabel("Qantity :");
-            add_name_tf = new JTextField(20);
-            add_type_cb = new JComboBox();
-            add_price_tf = new JTextField(20);
-            add_expiry_date_tf = new JTextField(20);
-            add_company_tf = new JTextField(20);
-            add_shelf_number_tf = new JTextField(20);
-            add_quantity_tf = new JTextField(20);
-            add_b = new JButton("Add");
-            
-            add_type_cb.addItem("Select drug type");
-            add_type_cb.addItem("Medicine");
-            add_type_cb.addItem("Syrup");
-            
-            add_b.setForeground(new Color(255,250,250));
-            add_b.setBackground(new Color(0,0,0));
-            
-            add_name.setBounds(110, 40, 150, 30);
-            add_type.setBounds(110, 90, 150, 30);
-            add_price.setBounds(110, 140, 150, 30);
-            add_expiry_date.setBounds(110, 190, 150, 30);
-            add_company.setBounds(110, 240, 150, 30);
-            add_shelf_number.setBounds(110, 290, 150, 30);
-            add_quantity.setBounds(110, 340, 150, 30);
-            
-            add_name_tf.setBounds(220, 40, 150, 25);
-            add_type_cb.setBounds(220, 90, 150, 33);
-            add_price_tf.setBounds(220, 140, 150, 30);
-            add_expiry_date_tf.setBounds(220, 190, 150, 30);
-            add_company_tf.setBounds(220, 240, 150, 30);
-            add_shelf_number_tf.setBounds(220, 290, 150, 30);
-            add_quantity_tf.setBounds(220, 340, 150, 30);
-            
-            add_b.setBounds(200, 390, 80, 30);
-            
-            add_b.addActionListener(this);
-            
-            add_name.setFont(f);
-            add_type.setFont(f);
-            add_price.setFont(f);
-            add_expiry_date.setFont(f);
-            add_company.setFont(f);
-            add_shelf_number.setFont(f);
-            add_quantity.setFont(f);
-            
-            add_name_tf.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-            add_type_cb.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-            add_price_tf.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-            add_expiry_date_tf.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-            add_company_tf.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-            add_quantity_tf.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-            add_shelf_number_tf.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-            
-            add_db.add(add_name);
-            add_db.add(add_type);
-            add_db.add(add_price);
-            add_db.add(add_expiry_date);
-            add_db.add(add_company);
-            add_db.add(add_shelf_number);
-            add_db.add(add_quantity);
-            
-            add_db.add(add_name_tf);
-            add_db.add(add_type_cb);
-            add_db.add(add_price_tf);
-            add_db.add(add_expiry_date_tf);
-            add_db.add(add_company_tf);
-            add_db.add(add_shelf_number_tf);
-            add_db.add(add_quantity_tf);
-            
-            add_db.add(add_b);
-            
-            add_db.getContentPane().setBackground(new Color(152, 251, 152));
-            add_db.getRootPane().setBorder(BorderFactory.createMatteBorder(5, 5, 5, 5, new Color(0, 128, 0)));
-            add_db.setVisible(true);
-            add_db.setSize(500,500);    
-            add_db.setLocationRelativeTo(null);
+
+    private void applySearch(String text) {
+        String trimmed = text.trim();
+        sorter.setRowFilter(trimmed.isEmpty() ? null : RowFilter.regexFilter("(?i)" + trimmed));
+    }
+
+    private JTable loadTable(String sql) {
+        List<String> columnNames = new ArrayList<>();
+        List<List<Object>> data = new ArrayList<>();
+        try (Connection con = DBConnection.getConnection();
+             Statement stmt = con.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            ResultSetMetaData md = rs.getMetaData();
+            int cols = md.getColumnCount();
+            for (int i = 1; i <= cols; i++) columnNames.add(md.getColumnName(i));
+            while (rs.next()) {
+                List<Object> row = new ArrayList<>(cols);
+                for (int i = 1; i <= cols; i++) row.add(rs.getObject(i));
+                data.add(row);
+            }
+        } catch (SQLException e) { System.out.println(e.getMessage()); }
+        Vector<String> colVec = new Vector<>(columnNames);
+        Vector<Vector<Object>> dataVec = new Vector<>();
+        for (List<Object> row : data) dataVec.add(new Vector<>(row));
+        return new JTable(dataVec, colVec) {
+            @Override public Class<?> getColumnClass(int col) {
+                for (int row = 0; row < getRowCount(); row++) {
+                    Object o = getValueAt(row, col);
+                    if (o != null) return o.getClass();
+                }
+                return Object.class;
+            }
+        };
+    }
+
+    private JComboBox<String> createDrugTypeCombo() {
+        return UITheme.createComboBox("Select drug type", "Medicine", "Syrup");
+    }
+
+    private void refreshWarnings(Connection con) throws SQLException {
+        try (Statement st = con.createStatement()) {
+            st.addBatch("DELETE FROM `mm_warning`;");
+            st.addBatch("INSERT INTO `mm_warning` SELECT `Name`, `Type`, `Expiry day's`, `Quantity` FROM `mm_drugs` WHERE `Expiry day's` < 11 OR `Quantity` < 15;");
+            st.executeBatch();
         }
-        else if(ae.getSource() == add_b)
-        {
-            if(add_name_tf.getText().equals("") || add_type_cb.getSelectedItem().equals("Select drug type") || add_price_tf.getText().equals("") || add_expiry_date_tf.getText().equals("") || add_company_tf.getText().equals("") || add_shelf_number_tf.getText().equals("") || add_quantity_tf.getText().equals(""))
-            {
-                JOptionPane.showMessageDialog(Admin_GUI.frame,"Empty Fields cann't be Entered.","Drugs - Add",JOptionPane.ERROR_MESSAGE); 
-            }
-            else
-            {
-                try
-                {
-                    Class.forName("com.mysql.cj.jdbc.Driver");
-                    Connection con = DriverManager.getConnection(url , uname , pass);   
-                    Statement st = con.createStatement();
-                    st.execute("INSERT INTO `mm_drugs` (`Name`, `Type`, `Price`, `Expiry day's`, `Company`, `Shelf No.`, `Quantity`) VALUES ('"+add_name_tf.getText()+"', '"+add_type_cb.getSelectedItem()+"', '"+Integer.parseInt(add_price_tf.getText())+"', '"+Integer.parseInt(add_expiry_date_tf.getText())+"', '"+add_company_tf.getText()+"', '"+Integer.parseInt(add_shelf_number_tf.getText())+"', '"+Integer.parseInt(add_quantity_tf.getText())+"')");
-                    st.close();
-                    if(Integer.parseInt(add_quantity_tf.getText()) < 15 || Integer.parseInt(add_expiry_date_tf.getText()) < 10 )
-                    {
-                        Statement st1 = con.createStatement();
-                        st1.addBatch("DELETE FROM `mm_warning`;");
-                        st1.addBatch("INSERT INTO `mm_warning` select `Name`, `Type`, `Expiry day's`, `Quantity` from `mm_drugs` where `Expiry day's` < 11 OR `Quantity` < 15;");
-                        st1.executeBatch();
-                        st1.close();
-                    }
-                    
-                    
-                    con.close();
-                }
-                catch(Exception e)
-                {
-                    System.out.println(e);
-                }
-                add_name_tf.setText("");
-                add_price_tf.setText("");
-                add_expiry_date_tf.setText("");
-                add_company_tf.setText("");
-                add_shelf_number_tf.setText("");
-                add_quantity_tf.setText("");
-                new Admin_GUI_drugs();
-                JOptionPane.showMessageDialog(Admin_GUI.frame,"Successfully Added.","Drugs - Add",JOptionPane.INFORMATION_MESSAGE); 
-            } 
+    }
+
+    private void renumberIds(Connection con, String table) throws SQLException {
+        try (Statement st = con.createStatement()) {
+            st.addBatch("SET @num := 0;");
+            st.addBatch("UPDATE `" + table + "` SET SN = @num := (@num+1);");
+            st.addBatch("ALTER TABLE `" + table + "` AUTO_INCREMENT = 1;");
+            st.executeBatch();
         }
-        else if(ae.getSource() == delete)
-        {
-            if(drugs_list.getSelectedRow() != -1) 
-            {
-                try
-                {
-                    int sn = (int) drugs_list.getModel().getValueAt(drugs_list.getSelectedRow(), 0);
-                    String Name = drugs_list.getModel().getValueAt(drugs_list.getSelectedRow(), 1).toString();
-                    String type = drugs_list.getModel().getValueAt(drugs_list.getSelectedRow(), 2).toString();
-                    int quatity = (int) drugs_list.getModel().getValueAt(drugs_list.getSelectedRow(), 7);
-                    int ed = (int) drugs_list.getModel().getValueAt(drugs_list.getSelectedRow(), 4);
-                    String sql1 = "DELETE FROM `mm_drugs` WHERE SN = \""+sn+"\";";
-                    String sql2 = "DELETE FROM `mm_warning` WHERE Name = \""+Name+"\" AND Type = \""+type+"\" AND Quantity = \""+quatity+"\" AND `Expiry day's` = \""+ed+"\";";
-                    Class.forName("com.mysql.cj.jdbc.Driver");
-                    Connection con = DriverManager.getConnection(url , uname , pass);   
-                    Statement st3 = con.createStatement();
-                    String q1 = "SET  @num := 0;";
-                    String q2 = "UPDATE `mm_drugs` SET SN = @num := (@num+1);";
-                    String q3 = "ALTER TABLE `mm_drugs` AUTO_INCREMENT =1;";
-                    st3.addBatch(q1);
-                    st3.addBatch(q2);
-                    st3.addBatch(q3);
-                    Statement st1 = con.createStatement();
-                    Statement st2 = con.createStatement();
-                    st1.executeUpdate(sql1);
-                    st2.executeUpdate(sql2);
-                    st1.close();
-                    st2.close();
-                    
-                    
-                    st3.executeBatch();
-                    st3.close();
-                    con.close();
-                }
-                catch(Exception e)
-                {
-                    System.out.println(e);
-                }
-                new Admin_GUI_drugs();
-                JOptionPane.showMessageDialog(Admin_GUI.frame,"Successfully Deleted.","Drugs - Delete",JOptionPane.INFORMATION_MESSAGE); 
-            }
-            else
-            {
-                JOptionPane.showMessageDialog(Admin_GUI.frame,"Select Row First.","Drugs - Delete",JOptionPane.ERROR_MESSAGE); 
-            }
-            
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent ae) {
+        if (ae.getSource() == add)            showAddDialog();
+        else if (ae.getSource() == addBtn)    handleAdd();
+        else if (ae.getSource() == delete)    handleDelete();
+        else if (ae.getSource() == update)    showUpdateDialog();
+        else if (ae.getSource() == updateBtn) handleUpdate();
+        else if (ae.getSource() == salesOpen) showSalesDialog();
+        else if (ae.getSource() == salesBtn)  handleSales();
+    }
+
+    private void showAddDialog() {
+        JDialog dialog = new JDialog(Admin_GUI.frame, "Add Drug", true);
+        dialog.setSize(480, 520);
+        dialog.setLocationRelativeTo(Admin_GUI.frame);
+        dialog.setLayout(new BorderLayout());
+
+        JPanel form = UITheme.createFormPanel();
+        addNameTf        = UITheme.createTextField();
+        addTypeCb        = createDrugTypeCombo();
+        addPriceTf       = UITheme.createTextField();
+        addExpiryDateTf  = UITheme.createTextField();
+        addCompanyTf     = UITheme.createTextField();
+        addShelfNumberTf = UITheme.createTextField();
+        addQuantityTf    = UITheme.createTextField();
+
+        String[] labels = {"Name", "Type", "Price", "Expiry Days", "Company", "Shelf No.", "Quantity"};
+        Component[] fields = {addNameTf, addTypeCb, addPriceTf, addExpiryDateTf, addCompanyTf, addShelfNumberTf, addQuantityTf};
+        for (int i = 0; i < labels.length; i++) {
+            form.add(UITheme.createFormLabel(labels[i]), UITheme.labelConstraints(i));
+            form.add(fields[i], UITheme.fieldConstraints(i));
         }
-        else if(ae.getSource() == update)
-        {
-            if(drugs_list.getSelectedRow() == -1)
-            {
-                JOptionPane.showMessageDialog(Admin_GUI.frame,"Select Row First.","Drugs - Update",JOptionPane.ERROR_MESSAGE); 
-            }
-            else
-            {
-                int j = drugs_list.getSelectedRow();
-                JDialog update_db =new JDialog(Admin_GUI.frame,"Update to Drugs List",false);
-            
-                update_db.setLayout(null);
 
-                update_name = new JLabel("Name :");
-                update_type = new JLabel("Type :");
-                update_price = new JLabel("Price");
-                update_expiry_date = new JLabel("Expiry Day's");
-                update_company = new JLabel("Company :");
-                update_shelf_number = new JLabel("Shelf Number :");
-                update_quantity = new JLabel("Quantity :");
-                update_name_tf = new JTextField(20);
-                update_type_cb = new JComboBox();
-                update_price_tf = new JTextField(20);
-                update_expiry_date_tf = new JTextField(20);
-                update_company_tf = new JTextField(20);
-                update_shelf_number_tf = new JTextField(20);
-                update_quantity_tf = new JTextField(20);
-                update_b = new JButton("Update");
-                
-                update_type_cb.addItem("Select drug type");
-                update_type_cb.addItem("Medicine");
-                update_type_cb.addItem("Syrup");
-                
-                update_name_tf.setText(drugs_list.getModel().getValueAt(j, 1).toString());
-                update_price_tf.setText(drugs_list.getModel().getValueAt(j, 3).toString());
-                update_expiry_date_tf.setText(drugs_list.getModel().getValueAt(j, 4).toString());
-                update_company_tf.setText(drugs_list.getModel().getValueAt(j, 5).toString());
-                update_shelf_number_tf.setText(drugs_list.getModel().getValueAt(j, 6).toString());
-                update_quantity_tf.setText(drugs_list.getModel().getValueAt(j, 7).toString());
+        addBtn = UITheme.createPrimaryButton("Add Drug");
+        addBtn.addActionListener(this);
+        JButton cancel = UITheme.createButton("Cancel", new Color(100, 116, 139), new Color(71, 85, 105));
+        cancel.addActionListener(e -> dialog.dispose());
 
-                update_b.setForeground(new Color(255,250,250));
-                update_b.setBackground(new Color(0,0,0));
+        dialog.add(UITheme.createSectionHeader("Add New Drug"), BorderLayout.NORTH);
+        dialog.add(new JScrollPane(form), BorderLayout.CENTER);
+        dialog.add(UITheme.createDialogButtonPanel(cancel, addBtn), BorderLayout.SOUTH);
+        UITheme.styleDialog(dialog);
+        dialog.setVisible(true);
+    }
 
-                update_name.setBounds(110, 40, 150, 30);
-                update_type.setBounds(110, 90, 150, 30);
-                update_price.setBounds(110, 140, 150, 30);
-                update_expiry_date.setBounds(110, 190, 150, 30);
-                update_company.setBounds(110, 240, 150, 30);
-                update_shelf_number.setBounds(110, 290, 150, 30);
-                update_quantity.setBounds(110, 340, 150, 30);
-
-                update_name_tf.setBounds(220, 40, 150, 25);
-                update_type_cb.setBounds(220, 90, 150, 30);
-                update_price_tf.setBounds(220, 140, 150, 30);
-                update_expiry_date_tf.setBounds(220, 190, 150, 30);
-                update_company_tf.setBounds(220, 240, 150, 30);
-                update_shelf_number_tf.setBounds(220, 290, 150, 30);
-                update_quantity_tf.setBounds(220, 340, 150, 30);
-
-                update_b.setBounds(200, 390, 80, 30);
-
-                update_b.addActionListener(this);
-
-                update_name.setFont(f);
-                update_type.setFont(f);
-                update_price.setFont(f);
-                update_expiry_date.setFont(f);
-                update_company.setFont(f);
-                update_shelf_number.setFont(f);
-                update_quantity.setFont(f);
-
-                update_name_tf.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-                update_type_cb.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-                update_price_tf.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-                update_expiry_date_tf.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-                update_company_tf.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-                update_shelf_number_tf.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-                update_quantity_tf.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-
-                update_db.add(update_name);
-                update_db.add(update_type);
-                update_db.add(update_price);
-                update_db.add(update_expiry_date);
-                update_db.add(update_company);
-                update_db.add(update_shelf_number);
-                update_db.add(update_quantity);
-
-                update_db.add(update_name_tf);
-                update_db.add(update_type_cb);
-                update_db.add(update_price_tf);
-                update_db.add(update_expiry_date_tf);
-                update_db.add(update_company_tf);
-                update_db.add(update_shelf_number_tf);
-                update_db.add(update_quantity_tf);
-
-                update_db.add(update_b);
-
-                update_db.getContentPane().setBackground(new Color(152, 251, 152));
-                update_db.getRootPane().setBorder(BorderFactory.createMatteBorder(5, 5, 5, 5, new Color(0, 128, 0)));
-                update_db.setVisible(true);
-                update_db.setSize(500,500); 
-                update_db.setLocationRelativeTo(null);
-            }
-             
+    private void handleAdd() {
+        if (addNameTf.getText().isEmpty() || addTypeCb.getSelectedItem().equals("Select drug type")
+                || addPriceTf.getText().isEmpty() || addExpiryDateTf.getText().isEmpty()
+                || addCompanyTf.getText().isEmpty() || addShelfNumberTf.getText().isEmpty()
+                || addQuantityTf.getText().isEmpty()) {
+            JOptionPane.showMessageDialog(Admin_GUI.frame, "Please fill in all fields.", "Drugs — Add", JOptionPane.WARNING_MESSAGE);
+            return;
         }
-        else if(ae.getSource() == update_b)
-        {
-            if(update_name_tf.getText().equals("") || update_type_cb.getSelectedItem().equals("Select drug type") || update_price_tf.getText().equals("") || update_expiry_date_tf.getText().equals("") || update_company_tf.getText().equals("") || update_shelf_number_tf.getText().equals("") || update_quantity_tf.getText().equals(""))
-            {
-                JOptionPane.showMessageDialog(Admin_GUI.frame,"Empty Fields cann't be Entered.","Drugs - Update",JOptionPane.ERROR_MESSAGE); 
-            }
-            else if(drugs_list.getSelectedRow() != -1)
-            {
-                try
-                {
-                    int sn = (int) drugs_list.getModel().getValueAt(drugs_list.getSelectedRow(), 0);
-                    String sql = "UPDATE `mm_drugs` SET `Name`='"+update_name_tf.getText()+"',`Type`='"+update_type_cb.getSelectedItem()+"',`Price`='"+Integer.parseInt(update_price_tf.getText())+"',`Expiry day's`='"+Integer.parseInt(update_expiry_date_tf.getText())+"',`Company`='"+update_company_tf.getText()+"',`Shelf No.`='"+Integer.parseInt(update_shelf_number_tf.getText())+"',`Quantity`='"+Integer.parseInt(update_quantity_tf.getText())+"' WHERE SN = \""+sn+"\";";
-                    Class.forName("com.mysql.cj.jdbc.Driver");
-                    Connection con = DriverManager.getConnection(url , uname , pass);
-                    if(Integer.parseInt(update_quantity_tf.getText()) < 15 || Integer.parseInt(update_expiry_date_tf.getText()) < 10 )
-                    {
-                        Statement st1 = con.createStatement();
-                        st1.addBatch("DELETE FROM `mm_warning`;");
-                        st1.addBatch("INSERT INTO `mm_warning` select `Name`, `Type`, `Expiry day's`, `Quantity` from `mm_drugs` where `Expiry day's` < 11 OR `Quantity` < 15;");
-                        st1.executeBatch();
-                        st1.close();
-                    }
-                    Statement st = con.createStatement();
-                    st.executeUpdate(sql);
-                    st.close();
-                    con.close();
-                }
-                catch(Exception e)
-                {
-                    System.out.println(e);
-                }
-                new Admin_GUI_drugs();
-                JOptionPane.showMessageDialog(Admin_GUI.frame,"Row Updated.","Drugs - Update",JOptionPane.INFORMATION_MESSAGE); 
-            }
-            else
-            {
-                JOptionPane.showMessageDialog(Admin_GUI.frame,"Select Row First.","Drugs - Update",JOptionPane.ERROR_MESSAGE); 
-            }
-            
+        int price, expiryDays, shelfNo, quantity;
+        try {
+            price     = Integer.parseInt(addPriceTf.getText());
+            expiryDays = Integer.parseInt(addExpiryDateTf.getText());
+            shelfNo   = Integer.parseInt(addShelfNumberTf.getText());
+            quantity  = Integer.parseInt(addQuantityTf.getText());
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(Admin_GUI.frame, "Price, Expiry Days, Shelf No., and Quantity must be whole numbers.", "Drugs — Add", JOptionPane.WARNING_MESSAGE);
+            return;
         }
-        else if(ae.getSource() == sales)
-        {
-            if(drugs_list.getSelectedRow() == -1)
-            {
-                JOptionPane.showMessageDialog(Admin_GUI.frame,"Select Row First.","Drugs - Sales",JOptionPane.ERROR_MESSAGE); 
+        try (Connection con = DBConnection.getConnection()) {
+            PreparedStatement ps = con.prepareStatement(
+                "INSERT INTO `mm_drugs` (`Name`, `Type`, `Price`, `Expiry day's`, `Company`, `Shelf No.`, `Quantity`) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            ps.setString(1, addNameTf.getText());
+            ps.setString(2, (String) addTypeCb.getSelectedItem());
+            ps.setInt(3, price);
+            ps.setInt(4, expiryDays);
+            ps.setString(5, addCompanyTf.getText());
+            ps.setInt(6, shelfNo);
+            ps.setInt(7, quantity);
+            ps.executeUpdate(); ps.close();
+            if (quantity < 15 || expiryDays < 10) {
+                refreshWarnings(con);
             }
-            else
-            {
-                JDialog sales_db =new JDialog(Admin_GUI.frame,"Add to sales",false);
-            
-                sales_db.setLayout(null);
+        } catch (Exception e) { System.out.println(e); return; }
+        new Admin_GUI_drugs();
+        JOptionPane.showMessageDialog(Admin_GUI.frame, "Drug added successfully.", "Drugs — Add", JOptionPane.INFORMATION_MESSAGE);
+    }
 
-                JLabel sales_quantity = new JLabel("Quantity :");
-                sales_quantity_tf = new JTextField(20);
-                
-                sales_b = new JButton("Add To Sales");
-                
-                sales_b.setForeground(new Color(255,250,250));
-                sales_b.setBackground(new Color(0,0,0));
-
-                sales_quantity.setBounds(110, 38, 150, 30);
-
-                sales_quantity_tf.setBounds(220, 40, 150, 25);
-
-                sales_b.setBounds(180, 95, 150, 30);
-
-                sales_b.addActionListener(this);
-
-                sales_quantity.setFont(f);
-
-                sales_quantity_tf.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-
-                sales_db.add(sales_quantity);
-
-                sales_db.add(sales_quantity_tf);
-
-                sales_db.add(sales_b);
-
-                sales_db.getContentPane().setBackground(new Color(152, 251, 152));
-                sales_db.getRootPane().setBorder(BorderFactory.createMatteBorder(5, 5, 5, 5, new Color(0, 128, 0)));
-                sales_db.setVisible(true);
-                sales_db.setSize(500,200); 
-                sales_db.setLocationRelativeTo(null);
-            }
+    private void handleDelete() {
+        if (drugsList.getSelectedRow() == -1) {
+            JOptionPane.showMessageDialog(Admin_GUI.frame, "Please select a row first.", "Drugs — Delete", JOptionPane.WARNING_MESSAGE);
+            return;
         }
-        else if(ae.getSource() == sales_b)
-        {
-            int sr = drugs_list.getSelectedRow();
-            if(sales_quantity_tf.getText().equals(""))
-            {
-                JOptionPane.showMessageDialog(Admin_GUI.frame,"Empty Fields cann't be Entered.","Drugs - Sales",JOptionPane.ERROR_MESSAGE); 
-            }
-            else
-            {
-                SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
-                Date date = new Date();
-                try
-                {
-                    int sn = (int) drugs_list.getModel().getValueAt(drugs_list.getSelectedRow(), 0);
-                    int q = 0 , u =0 ;
-                    int qv = Integer.parseInt(sales_quantity_tf.getText());
-                    int av = (int)drugs_list.getModel().getValueAt(drugs_list.getSelectedRow(), 7);
-                    int pr = (int) drugs_list.getModel().getValueAt(drugs_list.getSelectedRow(), 3);
-                    int t = pr * qv ;
-                    
-                    Class.forName("com.mysql.cj.jdbc.Driver");
-                    Connection con = DriverManager.getConnection(url , uname , pass);   
-                    Statement st = con.createStatement();
-                    if(qv <= av)
-                    {
-                        st.execute("INSERT INTO `mm_sales`(`Name`, `Type`, `Price`, `Quantity`,  `Total Price` , `Date`) VALUES ('"+drugs_list.getModel().getValueAt(sr, 1).toString()+"','"+drugs_list.getModel().getValueAt(sr, 2).toString()+"','"+Integer.parseInt(drugs_list.getModel().getValueAt(sr, 3).toString())+"','"+Integer.parseInt(sales_quantity_tf.getText())+"' ,'"+t+"' ,'"+formatter.format(date).toString()+"');");
-                        PreparedStatement ps2 = con.prepareStatement("SELECT * FROM `mm_drugs` WHERE SN = ?");
-                        ps2.setInt(1, sn);
-                        ResultSet my_rs = ps2.executeQuery();
-                        while (my_rs.next()) {
-                            q = my_rs.getInt("Quantity");
-                        }
-                        u = q - Integer.parseInt(sales_quantity_tf.getText());
-                        Statement st1 = con.createStatement();
-                        st1.execute("UPDATE `mm_drugs` SET `Quantity`='"+u+"' WHERE SN = "+sn+";");
-                        st1.close();
-                        JOptionPane.showMessageDialog(Admin_GUI.frame,"Successfully Added To Sales.","Drugs - Sales",JOptionPane.INFORMATION_MESSAGE); 
-                    }
-                    else
-                    {
-                        JOptionPane.showMessageDialog(Admin_GUI.frame,"Entered quantity more than available","Drugs - Sales",JOptionPane.ERROR_MESSAGE); 
-                    }
-                    if( u <= 0)
-                    {
-                        String sql1 = "DELETE FROM `mm_drugs` WHERE SN = \""+sn+"\";";
-                        Statement st3 = con.createStatement();
-                        st3.execute(sql1);
-                        st3.close();
-                    }
-                    Statement st3 = con.createStatement();
-                    String q1 = "SET  @num := 0;";
-                    String q2 = "UPDATE `mm_drugs` SET SN = @num := (@num+1);";
-                    String q3 = "ALTER TABLE `mm_drugs` AUTO_INCREMENT =1;";
-                    st3.addBatch(q1);
-                    st3.addBatch(q2);
-                    st3.addBatch(q3);
-                    st3.executeBatch();
-                    st3.close();
-                    st.close();
-                    con.close();
-                    new Admin_GUI_drugs();
-                }
-                catch(Exception e)
-                {
-                    System.out.println(e);
-                }
-                sales_quantity_tf.setText("");
+        int confirm = JOptionPane.showConfirmDialog(Admin_GUI.frame, "Are you sure you want to delete this drug?", "Confirm Delete", JOptionPane.YES_NO_OPTION);
+        if (confirm != JOptionPane.YES_OPTION) return;
 
-            } 
+        try (Connection con = DBConnection.getConnection()) {
+            int sn       = (int) drugsList.getModel().getValueAt(drugsList.convertRowIndexToModel(drugsList.getSelectedRow()), 0);
+            String name  = drugsList.getModel().getValueAt(drugsList.convertRowIndexToModel(drugsList.getSelectedRow()), 1).toString();
+            String type  = drugsList.getModel().getValueAt(drugsList.convertRowIndexToModel(drugsList.getSelectedRow()), 2).toString();
+            int quantity = (int) drugsList.getModel().getValueAt(drugsList.convertRowIndexToModel(drugsList.getSelectedRow()), 7);
+            int ed       = (int) drugsList.getModel().getValueAt(drugsList.convertRowIndexToModel(drugsList.getSelectedRow()), 4);
+
+            PreparedStatement ps1 = con.prepareStatement("DELETE FROM `mm_drugs` WHERE SN = ?");
+            ps1.setInt(1, sn); ps1.executeUpdate(); ps1.close();
+
+            PreparedStatement ps2 = con.prepareStatement(
+                "DELETE FROM `mm_warning` WHERE Name = ? AND Type = ? AND Quantity = ? AND `Expiry day's` = ?");
+            ps2.setString(1, name); ps2.setString(2, type);
+            ps2.setInt(3, quantity); ps2.setInt(4, ed);
+            ps2.executeUpdate(); ps2.close();
+
+            renumberIds(con, "mm_drugs");
+        } catch (Exception e) { System.out.println(e); }
+        new Admin_GUI_drugs();
+        JOptionPane.showMessageDialog(Admin_GUI.frame, "Drug deleted successfully.", "Drugs — Delete", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void showUpdateDialog() {
+        if (drugsList.getSelectedRow() == -1) {
+            JOptionPane.showMessageDialog(Admin_GUI.frame, "Please select a row first.", "Drugs — Update", JOptionPane.WARNING_MESSAGE);
+            return;
         }
-                
+        int modelRow = drugsList.convertRowIndexToModel(drugsList.getSelectedRow());
+        JDialog dialog = new JDialog(Admin_GUI.frame, "Update Drug", true);
+        dialog.setSize(480, 520);
+        dialog.setLocationRelativeTo(Admin_GUI.frame);
+        dialog.setLayout(new BorderLayout());
+
+        JPanel form = UITheme.createFormPanel();
+        updateNameTf        = UITheme.createTextField();
+        updateTypeCb        = createDrugTypeCombo();
+        updatePriceTf       = UITheme.createTextField();
+        updateExpiryDateTf  = UITheme.createTextField();
+        updateCompanyTf     = UITheme.createTextField();
+        updateShelfNumberTf = UITheme.createTextField();
+        updateQuantityTf    = UITheme.createTextField();
+
+        updateNameTf.setText(drugsList.getModel().getValueAt(modelRow, 1).toString());
+        updatePriceTf.setText(drugsList.getModel().getValueAt(modelRow, 3).toString());
+        updateExpiryDateTf.setText(drugsList.getModel().getValueAt(modelRow, 4).toString());
+        updateCompanyTf.setText(drugsList.getModel().getValueAt(modelRow, 5).toString());
+        updateShelfNumberTf.setText(drugsList.getModel().getValueAt(modelRow, 6).toString());
+        updateQuantityTf.setText(drugsList.getModel().getValueAt(modelRow, 7).toString());
+
+        String[] labels = {"Name", "Type", "Price", "Expiry Days", "Company", "Shelf No.", "Quantity"};
+        Component[] fields = {updateNameTf, updateTypeCb, updatePriceTf, updateExpiryDateTf, updateCompanyTf, updateShelfNumberTf, updateQuantityTf};
+        for (int i = 0; i < labels.length; i++) {
+            form.add(UITheme.createFormLabel(labels[i]), UITheme.labelConstraints(i));
+            form.add(fields[i], UITheme.fieldConstraints(i));
+        }
+
+        updateBtn = UITheme.createWarningButton("Save Changes");
+        updateBtn.addActionListener(this);
+        JButton cancel = UITheme.createButton("Cancel", new Color(100, 116, 139), new Color(71, 85, 105));
+        cancel.addActionListener(e -> dialog.dispose());
+
+        dialog.add(UITheme.createSectionHeader("Update Drug"), BorderLayout.NORTH);
+        dialog.add(new JScrollPane(form), BorderLayout.CENTER);
+        dialog.add(UITheme.createDialogButtonPanel(cancel, updateBtn), BorderLayout.SOUTH);
+        UITheme.styleDialog(dialog);
+        dialog.setVisible(true);
+    }
+
+    private void handleUpdate() {
+        if (updateNameTf.getText().isEmpty() || updateTypeCb.getSelectedItem().equals("Select drug type")
+                || updatePriceTf.getText().isEmpty() || updateExpiryDateTf.getText().isEmpty()
+                || updateCompanyTf.getText().isEmpty() || updateShelfNumberTf.getText().isEmpty()
+                || updateQuantityTf.getText().isEmpty()) {
+            JOptionPane.showMessageDialog(Admin_GUI.frame, "Please fill in all fields.", "Drugs — Update", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        if (drugsList.getSelectedRow() == -1) {
+            JOptionPane.showMessageDialog(Admin_GUI.frame, "Please select a row first.", "Drugs — Update", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        int price, expiryDays, shelfNo, quantity;
+        try {
+            price     = Integer.parseInt(updatePriceTf.getText());
+            expiryDays = Integer.parseInt(updateExpiryDateTf.getText());
+            shelfNo   = Integer.parseInt(updateShelfNumberTf.getText());
+            quantity  = Integer.parseInt(updateQuantityTf.getText());
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(Admin_GUI.frame, "Price, Expiry Days, Shelf No., and Quantity must be whole numbers.", "Drugs — Update", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        try (Connection con = DBConnection.getConnection()) {
+            int sn = (int) drugsList.getModel().getValueAt(drugsList.convertRowIndexToModel(drugsList.getSelectedRow()), 0);
+            PreparedStatement ps = con.prepareStatement(
+                "UPDATE `mm_drugs` SET `Name`=?, `Type`=?, `Price`=?, `Expiry day's`=?, `Company`=?, `Shelf No.`=?, `Quantity`=? WHERE SN = ?");
+            ps.setString(1, updateNameTf.getText());
+            ps.setString(2, (String) updateTypeCb.getSelectedItem());
+            ps.setInt(3, price);
+            ps.setInt(4, expiryDays);
+            ps.setString(5, updateCompanyTf.getText());
+            ps.setInt(6, shelfNo);
+            ps.setInt(7, quantity);
+            ps.setInt(8, sn);
+            ps.executeUpdate(); ps.close();
+            if (quantity < 15 || expiryDays < 10) {
+                refreshWarnings(con);
+            }
+        } catch (Exception e) { System.out.println(e); return; }
+        new Admin_GUI_drugs();
+        JOptionPane.showMessageDialog(Admin_GUI.frame, "Drug updated successfully.", "Drugs — Update", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void showSalesDialog() {
+        if (drugsList.getSelectedRow() == -1) {
+            JOptionPane.showMessageDialog(Admin_GUI.frame, "Please select a drug first.", "Drugs — Sales", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        int modelRow  = drugsList.convertRowIndexToModel(drugsList.getSelectedRow());
+        String drugName = drugsList.getModel().getValueAt(modelRow, 1).toString();
+        int available   = (int) drugsList.getModel().getValueAt(modelRow, 7);
+
+        JDialog dialog = new JDialog(Admin_GUI.frame, "Add to Sales", true);
+        dialog.setSize(420, 300);
+        dialog.setLocationRelativeTo(Admin_GUI.frame);
+        dialog.setLayout(new BorderLayout());
+
+        JPanel form = UITheme.createFormPanel();
+        JTextField drugNameDisplay = UITheme.createTextField();
+        drugNameDisplay.setText(drugName);
+        drugNameDisplay.setEditable(false);
+        drugNameDisplay.setBackground(new Color(248, 250, 252));
+        salesQuantityTf = UITheme.createTextField();
+
+        JLabel availLbl = UITheme.createFormLabel("Available: " + available + " units");
+        availLbl.setForeground(UITheme.SUCCESS);
+
+        form.add(UITheme.createFormLabel("Drug"),     UITheme.labelConstraints(0));
+        form.add(drugNameDisplay,                      UITheme.fieldConstraints(0));
+        form.add(UITheme.createFormLabel("Quantity"), UITheme.labelConstraints(1));
+        form.add(salesQuantityTf,                      UITheme.fieldConstraints(1));
+        form.add(availLbl,                             UITheme.fieldConstraints(2));
+
+        salesBtn = UITheme.createSuccessButton("Confirm Sale");
+        salesBtn.addActionListener(this);
+        JButton cancel = UITheme.createButton("Cancel", new Color(100, 116, 139), new Color(71, 85, 105));
+        cancel.addActionListener(e -> dialog.dispose());
+
+        dialog.add(UITheme.createSectionHeader("Record Sale"), BorderLayout.NORTH);
+        dialog.add(form, BorderLayout.CENTER);
+        dialog.add(UITheme.createDialogButtonPanel(cancel, salesBtn), BorderLayout.SOUTH);
+        UITheme.styleDialog(dialog);
+        dialog.setVisible(true);
+    }
+
+    private void handleSales() {
+        if (salesQuantityTf.getText().isEmpty()) {
+            JOptionPane.showMessageDialog(Admin_GUI.frame, "Please enter a quantity.", "Drugs — Sales", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        int modelRow = drugsList.convertRowIndexToModel(drugsList.getSelectedRow());
+        int qv;
+        try {
+            qv = Integer.parseInt(salesQuantityTf.getText());
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(Admin_GUI.frame, "Quantity must be a whole number.", "Drugs — Sales", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        try (Connection con = DBConnection.getConnection()) {
+            int sn  = (int) drugsList.getModel().getValueAt(modelRow, 0);
+            int av  = (int) drugsList.getModel().getValueAt(modelRow, 7);
+            int pr  = (int) drugsList.getModel().getValueAt(modelRow, 3);
+
+            if (qv > av) {
+                JOptionPane.showMessageDialog(Admin_GUI.frame, "Quantity exceeds available stock (" + av + ").", "Drugs — Sales", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            int total = pr * qv;
+            String date = new SimpleDateFormat("dd/MM/yyyy").format(new java.util.Date());
+
+            PreparedStatement ps = con.prepareStatement(
+                "INSERT INTO `mm_sales`(`Name`, `Type`, `Price`, `Quantity`, `Total Price`, `Date`) VALUES (?, ?, ?, ?, ?, ?)");
+            ps.setString(1, drugsList.getModel().getValueAt(modelRow, 1).toString());
+            ps.setString(2, drugsList.getModel().getValueAt(modelRow, 2).toString());
+            ps.setInt(3, pr); ps.setInt(4, qv); ps.setInt(5, total); ps.setString(6, date);
+            ps.executeUpdate(); ps.close();
+
+            int newQty = av - qv;
+            PreparedStatement ps2 = con.prepareStatement("UPDATE `mm_drugs` SET `Quantity`=? WHERE SN = ?");
+            ps2.setInt(1, newQty); ps2.setInt(2, sn); ps2.executeUpdate(); ps2.close();
+
+            if (newQty <= 0) {
+                PreparedStatement ps3 = con.prepareStatement("DELETE FROM `mm_drugs` WHERE SN = ?");
+                ps3.setInt(1, sn); ps3.executeUpdate(); ps3.close();
+            }
+            renumberIds(con, "mm_drugs");
+            JOptionPane.showMessageDialog(Admin_GUI.frame, "Sale recorded successfully.", "Drugs — Sales", JOptionPane.INFORMATION_MESSAGE);
+        } catch (Exception e) { System.out.println(e); }
+        salesQuantityTf.setText("");
+        new Admin_GUI_drugs();
     }
 }
